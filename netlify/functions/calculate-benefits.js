@@ -2,6 +2,55 @@ const Anthropic = require('@anthropic-ai/sdk')
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+// ---------------------------------------------------------------------------
+// Rate limiting — in-memory per IP, max 5 calls per 15-minute window.
+// Protects against API cost abuse. Resets on cold start; good enough for
+// burst protection without needing an external store.
+// ---------------------------------------------------------------------------
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000 // 15 minutes
+const ipRequests = new Map() // ip -> { count, windowStart }
+
+function isRateLimited(ip) {
+  const now = Date.now()
+  const entry = ipRequests.get(ip)
+
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    ipRequests.set(ip, { count: 1, windowStart: now })
+    return false
+  }
+
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return true
+  }
+
+  entry.count++
+  return false
+}
+
+// ---------------------------------------------------------------------------
+// Answer validation — only allow values from the known option lists.
+// Prevents prompt injection via crafted answer strings.
+// ---------------------------------------------------------------------------
+const VALID_ANSWERS = {
+  situation: ['Working full-time', 'Working part-time', 'Self-employed', 'Unemployed', 'Unable to work — health', 'Carer for someone', 'Retired', 'Student'],
+  age: ['Under 25', '25 to 34', '35 to 49', '50 to 64', '65 or over'],
+  housing: ['I rent privately', 'Council or housing association', 'Own with a mortgage', 'Own outright', 'I live with family or friends'],
+  children: ['No children', '1 child', '2 children', '3 or more children'],
+  income: ['Under £500', '£500 to £1,000', '£1,000 to £1,500', '£1,500 to £2,500', 'Over £2,500'],
+  savings: ['No savings', 'Under £1,000', '£1,000 to £6,000', '£6,000 to £16,000', 'Over £16,000'],
+  health: ['No health conditions', 'Yes — affects daily living', 'Yes — unable to work', 'Yes — need care from others'],
+  region: ['London', 'South East', 'South West', 'Midlands', 'North of England', 'Wales', 'Scotland', 'Northern Ireland'],
+}
+
+function validateAnswers(answers) {
+  if (!answers || typeof answers !== 'object') return false
+  for (const [key, validOptions] of Object.entries(VALID_ANSWERS)) {
+    if (!validOptions.includes(answers[key])) return false
+  }
+  return true
+}
+
 const SYSTEM_PROMPT = `You are a UK benefits eligibility expert with complete knowledge of DWP 2026/27 rules.
 Respond ONLY with a valid JSON array. No preamble, no markdown fences, no explanation. Raw JSON only.
 
@@ -44,9 +93,38 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method not allowed' }
   }
 
-  try {
-    const { answers } = JSON.parse(event.body)
+  // Rate limiting
+  const ip =
+    event.headers['x-forwarded-for']?.split(',')[0].trim() ||
+    event.headers['client-ip'] ||
+    'unknown'
 
+  if (isRateLimited(ip)) {
+    return {
+      statusCode: 429,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Too many requests. Please wait a few minutes before trying again.' }),
+    }
+  }
+
+  let answers
+  try {
+    const body = JSON.parse(event.body)
+    answers = body.answers
+  } catch {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid request body' }) }
+  }
+
+  // Validate that all answers are from the known option lists
+  if (!validateAnswers(answers)) {
+    return {
+      statusCode: 400,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Invalid answers. Please complete the questionnaire on the site.' }),
+    }
+  }
+
+  try {
     const userMessage = `Circumstances:
 - Employment status: ${answers.situation}
 - Age group: ${answers.age}
