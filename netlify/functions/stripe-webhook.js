@@ -1,0 +1,157 @@
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const { createClient } = require('@supabase/supabase-js')
+const { Resend } = require('resend')
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+exports.handler = async (event) => {
+  const sig = event.headers['stripe-signature']
+  let stripeEvent
+
+  try {
+    stripeEvent = stripe.webhooks.constructEvent(
+      event.body, sig, process.env.STRIPE_WEBHOOK_SECRET
+    )
+  } catch (err) {
+    console.error('Webhook signature error:', err.message)
+    return { statusCode: 400, body: `Webhook Error: ${err.message}` }
+  }
+
+  if (stripeEvent.type === 'checkout.session.completed') {
+    const session = stripeEvent.data.object
+    const { report_id, user_id, referral_code, total_monthly } = session.metadata
+    const customerEmail = session.customer_details?.email
+
+    try {
+      // 1. Mark report as paid in Supabase
+      const { data: report } = await supabase
+        .from('reports')
+        .update({
+          paid: true,
+          stripe_session_id: session.id,
+          paid_at: new Date().toISOString(),
+        })
+        .eq('id', report_id)
+        .select()
+        .single()
+
+      if (!report) {
+        console.warn('Report not found for id:', report_id)
+        return { statusCode: 200, body: 'OK' }
+      }
+
+      // 2. Generate PDF
+      const pdfResponse = await fetch(
+        `${process.env.VITE_APP_URL}/.netlify/functions/generate-pdf`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            benefits: report.benefits,
+            totalMonthly: report.total_monthly_pence / 100,
+            totalAnnual: report.total_annual_pence / 100,
+            userEmail: customerEmail,
+          }),
+        }
+      )
+      const { pdf } = await pdfResponse.json()
+
+      // 3. Send email with PDF attached
+      if (customerEmail && pdf) {
+        await resend.emails.send({
+          from: 'ClaimSmart UK <reports@claimsmart.uk>',
+          to: customerEmail,
+          subject: 'Your ClaimSmart benefits report is ready',
+          html: `
+            <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #2C2C2A;">
+              <div style="background: #0F6E56; padding: 20px 24px; border-radius: 12px 12px 0 0; margin-bottom: 0;">
+                <h1 style="color: white; font-size: 18px; margin: 0; font-weight: 500;">ClaimSmart UK</h1>
+              </div>
+              <div style="background: #f9f9f9; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 12px 12px; padding: 28px 24px;">
+                <h2 style="font-size: 20px; font-weight: 500; margin-top: 0;">Your benefits report is ready</h2>
+                <p style="color: #666; line-height: 1.6;">We found <strong>&pound;${total_monthly}/month</strong> in benefits you may be entitled to.</p>
+                <p style="color: #666; line-height: 1.6;">Your full personalised report is attached to this email as a PDF. It includes your complete benefits breakdown, step-by-step claim instructions, and your action plan for this week.</p>
+                <div style="background: #E1F5EE; border-radius: 8px; padding: 16px; margin: 20px 0;">
+                  <p style="color: #085041; font-weight: 500; margin: 0 0 4px;">Start here — your highest priority action:</p>
+                  <p style="color: #0F6E56; margin: 0; font-size: 14px;">Check page 2 of your report for your personalised action plan.</p>
+                </div>
+                <p style="color: #999; font-size: 12px; line-height: 1.5; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                  Results are estimates based on DWP rates April 2026/27. Always confirm your entitlement with DWP or Citizens Advice. ClaimSmart UK is not a financial adviser.
+                </p>
+              </div>
+            </div>
+          `,
+          attachments: [{
+            filename: 'ClaimSmart-Benefits-Report.pdf',
+            content: pdf,
+            encoding: 'base64',
+          }],
+        })
+      }
+
+      // 4. Create default calendar events for the user
+      if (user_id) {
+        const defaultEvents = [
+          {
+            user_id,
+            type: 'rate_change',
+            title: 'DWP benefit rates update',
+            description: 'Check if your entitlement has changed with the new April rates',
+            due_date: '2027-04-06',
+            remind_days_before: 30,
+          },
+          {
+            user_id,
+            type: 'deadline',
+            title: 'Re-check your entitlement',
+            description: 'Your circumstances may have changed — run a new assessment',
+            due_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            remind_days_before: 7,
+          },
+        ]
+        await supabase.from('notifications').insert(defaultEvents)
+
+        // Create claim status entries for each benefit
+        const claimStatuses = report.benefits.map(b => ({
+          user_id,
+          report_id,
+          benefit_name: b.name,
+          status: 'not_started',
+        }))
+        await supabase.from('claim_status').insert(claimStatuses)
+      }
+
+      // 5. Handle referral payment
+      if (referral_code && referral_code !== '') {
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', referral_code)
+          .single()
+
+        if (referrer) {
+          await supabase.from('referrals').insert({
+            referrer_id: referrer.id,
+            referred_email: customerEmail,
+            referred_user_id: user_id || null,
+            paid: true,
+          })
+          await supabase
+            .from('profiles')
+            .update({ referral_earnings_pence: supabase.rpc('increment', { x: 200 }) })
+            .eq('id', referrer.id)
+        }
+      }
+
+    } catch (err) {
+      console.error('Webhook processing error:', err)
+      // Don't return 500 — Stripe will retry. Log and move on.
+    }
+  }
+
+  return { statusCode: 200, body: 'OK' }
+}
