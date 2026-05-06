@@ -30,7 +30,7 @@ export default function TermsPage() {
           },
           {
             title: '6. Referral programme',
-            body: 'You may earn £2 for each friend who purchases a full report using your referral link. Referral earnings are credited to your account within 48 hours of a referred purchase being confirmed. Earnings are paid out by bank transfer upon request, subject to a minimum balance of £10. ClaimSmart UK reserves the right to withhold earnings where fraudulent referral activity is suspected, and to modify or discontinue the referral programme at any time with 14 days' notice.',
+            body: 'You may earn £2 for each friend who purchases a full report using your referral link. Referral earnings are credited to your account within 48 hours of a referred purchase being confirmed. Earnings are paid out by bank transfer upon request, subject to a minimum balance of £10. ClaimSmart UK reserves the right to withhold earnings where fraudulent referral activity is suspected, and to modify or discontinue the referral programme at any time with 14 days\u2019 notice.',
           },
           {
             title: '7. Acceptable use',
