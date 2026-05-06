@@ -13,20 +13,20 @@ export default function AuthPage() {
 
   return (
     <Layout showNav={false}>
-      <div className="max-w-sm mx-auto mt-20 px-4">
+      <div className="max-w-sm mx-auto mt-12 sm:mt-20 px-4">
         <div className="text-center mb-8">
           <div className="w-10 h-10 bg-teal-600 rounded-md flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-sm font-bold">CS</span>
           </div>
-          <h1 className="text-2xl font-medium text-gray-900">Sign in to save your results</h1>
-          <p className="text-sm text-gray-500 mt-2">
+          <h1 className="text-xl sm:text-2xl font-medium text-gray-900">Sign in to save your results</h1>
+          <p className="text-sm text-gray-500 mt-2 leading-relaxed">
             We only use your email to send your report. We never share your data.
           </p>
         </div>
 
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl hover:bg-gray-50 transition-colors"
+          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3.5 px-4 rounded-xl hover:bg-gray-50 transition-colors min-h-[48px]"
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />

@@ -46,7 +46,7 @@ export default function ReferralPage() {
         <p className="text-gray-500 text-sm mb-6">Earn £2 for every friend who gets their full report.</p>
 
         {/* Earnings summary */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
           {[
             { label: 'Total earned', value: formatGBP(earningsPence / 100) },
             { label: 'Successful referrals', value: String(paidReferrals.length) },
@@ -62,15 +62,15 @@ export default function ReferralPage() {
         {/* Referral link */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <h2 className="font-medium text-gray-900 mb-3">Your referral link</h2>
-          <div className="flex gap-2 mb-4">
+          <div className="flex flex-col sm:flex-row gap-2 mb-4">
             <input
               readOnly
               value={referralLink}
-              className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-gray-600"
+              className="flex-1 text-sm bg-gray-50 border border-gray-200 rounded-lg px-3 py-3 text-gray-600 min-w-0"
             />
             <button
               onClick={copyLink}
-              className="bg-teal-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-teal-800 transition-colors whitespace-nowrap"
+              className="bg-teal-600 text-white text-sm px-4 py-3 rounded-lg hover:bg-teal-800 transition-colors whitespace-nowrap min-h-[44px]"
             >
               {copied ? 'Copied!' : 'Copy link'}
             </button>

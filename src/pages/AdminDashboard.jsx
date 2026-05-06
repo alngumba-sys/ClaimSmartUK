@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Admin nav */}
-      <nav className="bg-white border-b border-gray-200 px-6 h-14 flex items-center justify-between">
+      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
             <span className="text-white text-xs font-bold">CS</span>
@@ -84,9 +84,9 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-xl w-full sm:w-fit overflow-x-auto">
           {tabs.map(tab => (
             <button
               key={tab}
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
         {activeTab === 'overview' && stats && (
           <>
             {/* Stat cards */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
               {[
                 { label: 'Total users', value: stats.totalUsers.toLocaleString() },
                 { label: 'Paid reports', value: stats.totalReports.toLocaleString() },

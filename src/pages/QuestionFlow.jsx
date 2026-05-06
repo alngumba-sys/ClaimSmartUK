@@ -219,21 +219,21 @@ export default function QuestionFlow() {
 
   return (
     <Layout showNav={false}>
-      <div className="max-w-lg mx-auto px-4 pt-6 pb-12">
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-16 sm:pb-12">
         {/* Progress bar */}
-        <div className="h-1 bg-gray-200 rounded-full">
+        <div className="h-1.5 bg-gray-200 rounded-full">
           <div
-            className="h-1 bg-teal-600 rounded-full transition-all duration-300"
+            className="h-1.5 bg-teal-600 rounded-full transition-all duration-300"
             style={{ width: `${((currentQuestion + 1) / 8) * 100}%` }}
           />
         </div>
-        <p className="text-xs text-gray-400 mt-1">Question {currentQuestion + 1} of 8</p>
+        <p className="text-sm text-gray-400 mt-2">Question {currentQuestion + 1} of 8</p>
 
         {/* Back button */}
         {currentQuestion > 0 && (
           <button
             onClick={handleBack}
-            className="mt-4 text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+            className="mt-4 text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 min-h-[44px]"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -243,7 +243,7 @@ export default function QuestionFlow() {
         )}
 
         {/* Question */}
-        <h2 className="text-xl font-medium text-gray-900 mt-6 mb-6">{question.title}</h2>
+        <h2 className="text-lg sm:text-xl font-medium text-gray-900 mt-6 mb-6 leading-snug">{question.title}</h2>
 
         {/* Options */}
         <div className="space-y-3">
@@ -251,7 +251,7 @@ export default function QuestionFlow() {
             <button
               key={option}
               onClick={() => handleSelect(option)}
-              className={`w-full text-left px-4 py-3.5 rounded-xl transition-colors text-sm ${
+              className={`w-full text-left px-4 py-4 rounded-xl transition-colors text-sm sm:text-base min-h-[48px] ${
                 answers[question.key] === option
                   ? 'border-2 border-teal-600 bg-teal-50 text-teal-800'
                   : 'border-2 border-gray-200 bg-white hover:border-teal-200 text-gray-700'

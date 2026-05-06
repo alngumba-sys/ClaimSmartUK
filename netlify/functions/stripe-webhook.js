@@ -45,8 +45,11 @@ exports.handler = async (event) => {
       }
 
       // 2. Generate PDF
+      // Use the internal Netlify function URL so this works in both local dev
+      // (localhost:8888) and production — never hardcode VITE_APP_URL here.
+      const baseUrl = process.env.URL || process.env.VITE_APP_URL || 'http://localhost:8888'
       const pdfResponse = await fetch(
-        `${process.env.VITE_APP_URL}/.netlify/functions/generate-pdf`,
+        `${baseUrl}/.netlify/functions/generate-pdf`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -140,9 +143,21 @@ exports.handler = async (event) => {
             referred_user_id: user_id || null,
             paid: true,
           })
+
+          // Fetch current earnings first, then add 200p.
+          // supabase.rpc('increment') was used here previously but that
+          // Postgres function was never defined — it silently failed every time.
+          const { data: referrerProfile } = await supabase
+            .from('profiles')
+            .select('referral_earnings_pence')
+            .eq('id', referrer.id)
+            .single()
+
           await supabase
             .from('profiles')
-            .update({ referral_earnings_pence: supabase.rpc('increment', { x: 200 }) })
+            .update({
+              referral_earnings_pence: (referrerProfile?.referral_earnings_pence || 0) + 200,
+            })
             .eq('id', referrer.id)
         }
       }

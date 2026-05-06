@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -26,6 +27,7 @@ export default function DashboardLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, profile, signOut } = useAuth()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   async function handleSignOut() {
     await signOut()
@@ -34,8 +36,97 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Mobile top bar with hamburger */}
+      <header className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
+            <span className="text-white text-xs font-bold">CS</span>
+          </div>
+          <span className="font-medium text-gray-900 text-sm">ClaimSmart</span>
+        </Link>
+        <button
+          onClick={() => setDrawerOpen(true)}
+          className="flex items-center justify-center w-10 h-10"
+          aria-label="Open menu"
+        >
+          <svg className="w-6 h-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      {/* Mobile drawer overlay */}
+      {drawerOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setDrawerOpen(false)} />
+          <aside className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl flex flex-col animate-[slideIn_0.2s_ease-out]">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <Link to="/" className="flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
+                <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">CS</span>
+                </div>
+                <span className="font-medium text-gray-900 text-sm">ClaimSmart UK</span>
+              </Link>
+              <button onClick={() => setDrawerOpen(false)} className="w-10 h-10 flex items-center justify-center" aria-label="Close menu">
+                <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {user && (
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} className="w-8 h-8 rounded-full" alt="" />
+                  ) : (
+                    <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 text-xs font-medium">
+                      {(user.email || '?')[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-gray-900 truncate">{profile?.full_name || 'My Account'}</p>
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <nav className="flex-1 p-3 space-y-1">
+              {NAV_ITEMS.map(item => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setDrawerOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+                    location.pathname === item.path
+                      ? 'bg-teal-50 text-teal-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <NavIcon type={item.icon} />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+
+            <div className="p-3 border-t border-gray-200">
+              <button
+                onClick={() => { handleSignOut(); setDrawerOpen(false) }}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-gray-500 hover:bg-gray-100 w-full transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Sign out
+              </button>
+            </div>
+          </aside>
+        </div>
+      )}
+
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 z-40">
+      <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 z-40">
         <div className="p-4 border-b border-gray-200">
           <Link to="/" className="flex items-center gap-2">
             <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
@@ -45,7 +136,6 @@ export default function DashboardLayout({ children }) {
           </Link>
         </div>
 
-        {/* User info */}
         {user && (
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
@@ -95,25 +185,9 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main content */}
-      <div className="md:ml-56">
-        <main className="p-4 md:p-8 pb-24 md:pb-8">{children}</main>
+      <div className="lg:ml-56">
+        <main className="p-4 sm:p-6 lg:p-8 pb-8">{children}</main>
       </div>
-
-      {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex">
-        {NAV_ITEMS.map(item => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex-1 flex flex-col items-center py-2.5 text-xs transition-colors ${
-              location.pathname === item.path ? 'text-teal-600' : 'text-gray-400'
-            }`}
-          >
-            <NavIcon type={item.icon} />
-            <span className="mt-0.5">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
     </div>
   )
 }

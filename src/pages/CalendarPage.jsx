@@ -94,21 +94,21 @@ export default function CalendarPage() {
   return (
     <DashboardLayout>
       <div className="max-w-3xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-medium text-gray-900">Claim calendar</h1>
+            <h1 className="text-xl sm:text-2xl font-medium text-gray-900">Claim calendar</h1>
             <p className="text-gray-500 text-sm">Key benefit dates, deadlines, and your personal reminders</p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => downloadICS(allEvents)}
-              className="text-sm border border-gray-200 text-gray-600 px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors"
+              className="text-sm border border-gray-200 text-gray-600 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors min-h-[44px]"
             >
-              Export to calendar
+              Export
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="text-sm bg-teal-600 text-white px-3 py-2 rounded-lg hover:bg-teal-800 transition-colors"
+              className="text-sm bg-teal-600 text-white px-3 py-2.5 rounded-lg hover:bg-teal-800 transition-colors min-h-[44px]"
             >
               Add reminder
             </button>
@@ -197,27 +197,34 @@ export default function CalendarPage() {
 
         {/* Add event modal */}
         {showAddModal && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
-            <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">Add reminder</h2>
+          <div className="fixed inset-0 bg-black/40 flex items-end sm:items-center justify-center z-50 sm:px-4">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-medium text-gray-900">Add reminder</h2>
+                <button onClick={() => setShowAddModal(false)} className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
               <div className="space-y-3">
                 <input
                   type="text"
                   placeholder="Reminder title"
                   value={newEvent.title}
                   onChange={e => setNewEvent(p => ({ ...p, title: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base"
                 />
                 <input
                   type="date"
                   value={newEvent.date}
                   onChange={e => setNewEvent(p => ({ ...p, date: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base"
                 />
                 <select
                   value={newEvent.type}
                   onChange={e => setNewEvent(p => ({ ...p, type: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base"
                 >
                   <option value="custom">Custom reminder</option>
                   <option value="deadline">Claim deadline</option>
@@ -228,19 +235,19 @@ export default function CalendarPage() {
                   placeholder="Notes (optional)"
                   value={newEvent.description}
                   onChange={e => setNewEvent(p => ({ ...p, description: e.target.value }))}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm h-20 resize-none"
+                  className="w-full border border-gray-200 rounded-lg px-3 py-3 text-base h-24 resize-none"
                 />
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="flex gap-2 mt-5">
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm hover:bg-gray-50"
+                  className="flex-1 border border-gray-200 text-gray-600 py-3 rounded-xl text-sm hover:bg-gray-50 min-h-[48px]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={addCustomEvent}
-                  className="flex-1 bg-teal-600 text-white py-2.5 rounded-xl text-sm hover:bg-teal-800"
+                  className="flex-1 bg-teal-600 text-white py-3 rounded-xl text-sm hover:bg-teal-800 min-h-[48px]"
                 >
                   Add reminder
                 </button>

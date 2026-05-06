@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Layout({ children, showNav = true }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   async function handleSignOut() {
     await signOut()
@@ -27,7 +29,9 @@ export default function Layout({ children, showNav = true }) {
               </div>
               <span className="font-bold text-white text-sm">ClaimSmart UK</span>
             </Link>
-            <div className="flex items-center gap-3">
+
+            {/* Desktop nav links */}
+            <div className="hidden sm:flex items-center gap-3">
               {user ? (
                 <>
                   <Link
@@ -59,7 +63,58 @@ export default function Layout({ children, showNav = true }) {
                 </Link>
               )}
             </div>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="sm:hidden flex items-center justify-center w-10 h-10"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
+
+          {/* Mobile slide-down menu */}
+          {menuOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+              <div
+                className="sm:hidden relative z-50 px-4 pb-4 space-y-2"
+                style={{ background: 'rgba(15,7,34,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+              >
+                <Link to="/check" onClick={() => setMenuOpen(false)} className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5">
+                  Check entitlement
+                </Link>
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5">
+                      Dashboard
+                    </Link>
+                    <button onClick={() => { handleSignOut(); setMenuOpen(false) }} className="block w-full text-left py-3 text-sm text-white/40 hover:text-white">
+                      Sign out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/auth"
+                    onClick={() => setMenuOpen(false)}
+                    className="block text-center py-3 mt-2 rounded-xl text-sm font-semibold"
+                    style={{ background: '#d4960a', color: '#0f0722' }}
+                  >
+                    Sign in
+                  </Link>
+                )}
+              </div>
+            </>
+          )}
         </nav>
       )}
 
@@ -67,11 +122,11 @@ export default function Layout({ children, showNav = true }) {
 
       <footer style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.07)' }} className="py-8">
         <div className="max-w-5xl mx-auto px-4 text-center">
-          <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <p className="text-xs sm:text-sm mb-3 leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>
             Results are estimates only, based on DWP rates April 2026/27. Always confirm with DWP or Citizens Advice.
             ClaimSmart UK is not a financial adviser.
           </p>
-          <div className="flex justify-center flex-wrap gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <div className="flex justify-center flex-wrap gap-3 sm:gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <span>·</span>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>

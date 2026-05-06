@@ -56,7 +56,7 @@ export default function ResultsPreview() {
       <div className="bg-teal-600 text-white py-10 px-4">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-teal-200 text-sm mb-2">Based on your answers, you may be missing:</p>
-          <p className="text-5xl font-medium">&pound;{Math.round(totalMonthly).toLocaleString()}</p>
+          <p className="text-4xl sm:text-5xl font-medium">&pound;{Math.round(totalMonthly).toLocaleString()}</p>
           <p className="text-teal-200 text-lg mt-1">per month</p>
           <p className="text-teal-100 mt-3 text-sm">
             That's up to &pound;{Math.round(totalAnnual).toLocaleString()} per year you could be entitled to
@@ -139,7 +139,7 @@ export default function ResultsPreview() {
           </div>
           <button
             onClick={handleUnlock}
-            className="w-full bg-teal-600 text-white font-medium py-4 rounded-xl hover:bg-teal-800 transition-colors text-base"
+            className="w-full bg-teal-600 text-white font-medium py-4 rounded-xl hover:bg-teal-800 transition-colors text-base min-h-[52px]"
           >
             Get my full report — &pound;9
           </button>

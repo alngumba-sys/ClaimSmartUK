@@ -14,3 +14,37 @@ body { font-family: 'Manrope', sans-serif; }
 
 /* Smooth scroll */
 html { scroll-behavior: smooth; }
+
+/* ── Responsive globals ───────────────────────────────────── */
+
+/* Prevent iOS auto-zoom on focused inputs */
+@media screen and (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Minimum touch-target size for interactive elements */
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Prevent horizontal overflow globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Cap prose line-length on wide screens */
+.prose-cap {
+  max-width: 75ch;
+}
+
+/* Make tables scrollable on mobile */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
