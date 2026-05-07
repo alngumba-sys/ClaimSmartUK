@@ -373,19 +373,17 @@ export default function QuestionFlow() {
           Question {currentQuestion + 1} of {QUESTIONS.length}
         </p>
 
-        {/* Back button */}
-        {currentQuestion > 0 && (
-          <button
-            onClick={handleBack}
-            className="flex items-center gap-1 text-sm mb-6 transition-opacity hover:opacity-80 min-h-[44px]"
-            style={{ color: 'rgba(255,255,255,0.45)' }}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        )}
+        {/* Back button — always visible; on Q1 goes back to landing page */}
+        <button
+          onClick={currentQuestion > 0 ? handleBack : () => navigate('/')}
+          className="flex items-center gap-1 text-sm mb-6 transition-opacity hover:opacity-80 min-h-[44px]"
+          style={{ color: 'rgba(255,255,255,0.45)' }}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
 
         {/* Question title */}
         <h2 className="text-xl sm:text-2xl font-extrabold text-white mb-3 leading-snug">
