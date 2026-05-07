@@ -71,27 +71,27 @@ const comparisonRows = [
 
 const whoQualifies = [
   {
-    icon: '💼', title: 'Working full or part time',
+    icon: 'briefcase', title: 'Working full or part time',
     items: ['Universal Credit top-up', 'Working Tax Credit', 'Childcare support (up to 85%)', 'Free school meals'],
   },
   {
-    icon: '🏠', title: 'Renting or with a mortgage',
+    icon: 'home', title: 'Renting or with a mortgage',
     items: ['Housing Benefit / UC housing element', 'Council Tax Reduction', 'Support for Mortgage Interest'],
   },
   {
-    icon: '👶', title: 'Families with children',
+    icon: 'child', title: 'Families with children',
     items: ['Child Benefit (£110.93/mo first child)', 'Child Tax Credit', 'Healthy Start vouchers', 'Free school meals'],
   },
   {
-    icon: '💊', title: 'Living with a health condition',
+    icon: 'health', title: 'Living with a health condition',
     items: ['Personal Independence Payment (PIP)', 'Attendance Allowance (65+)', 'UC limited capacity element', "Carer's Allowance"],
   },
   {
-    icon: '👴', title: 'At or near retirement',
+    icon: 'retirement', title: 'At or near retirement',
     items: ['Pension Credit (£944.98/mo)', 'Attendance Allowance', 'Council Tax Reduction', 'Free TV licence (75+)'],
   },
   {
-    icon: '🤝', title: 'Caring for someone',
+    icon: 'caring', title: 'Caring for someone',
     items: ["Carer's Allowance (£354.90/mo)", "Carer's Credit (NI protection)", 'UC carer element', 'Council Tax Reduction'],
   },
 ]
@@ -115,6 +115,22 @@ function SectionLabel({ children }) {
         {children}
       </span>
     </div>
+  )
+}
+
+function QualifyIcon({ type }) {
+  const iconPaths = {
+    briefcase: <><path strokeLinecap="round" strokeLinejoin="round" d="M20 7H4a1 1 0 00-1 1v10a2 2 0 002 2h14a2 2 0 002-2V8a1 1 0 00-1-1z" /><path strokeLinecap="round" strokeLinejoin="round" d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" /></>,
+    home: <><path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4" /><path strokeLinecap="round" strokeLinejoin="round" d="M9 21v-6a1 1 0 011-1h4a1 1 0 011 1v6" /></>,
+    child: <><circle cx="12" cy="7" r="3" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 10c-4 0-6 2-6 5v2h12v-2c0-3-2-5-6-5z" /></>,
+    health: <><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 11v4m-2-2h4" /></>,
+    retirement: <><circle cx="12" cy="8" r="4" /><path strokeLinecap="round" strokeLinejoin="round" d="M6 21v-1a6 6 0 0112 0v1" /></>,
+    caring: <><path strokeLinecap="round" strokeLinejoin="round" d="M16 4h2a2 2 0 012 2v1m-4-3v3m0-3H8m0 0H6a2 2 0 00-2 2v1m4-3v3" /><circle cx="9" cy="13" r="2.5" /><circle cx="15" cy="13" r="2.5" /><path strokeLinecap="round" strokeLinejoin="round" d="M5.5 21v-1a3.5 3.5 0 017 0v1m0 0v-1a3.5 3.5 0 017 0v1" /></>,
+  }
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={1.75}>
+      {iconPaths[type]}
+    </svg>
   )
 }
 
@@ -308,7 +324,11 @@ export default function LandingPage() {
             className="mt-8 rounded-2xl p-5 flex items-start gap-4"
             style={{ background: 'rgba(212,150,10,0.1)', border: '1px solid rgba(212,150,10,0.25)' }}
           >
-            <span className="text-xl">💡</span>
+            <span className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="white" strokeWidth={1.75}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+            </span>
             <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
               <strong style={{ color: '#d4960a' }}>The DWP does not chase you to claim.</strong> It is your
               responsibility to apply. ClaimSmart was built to remove the barriers — from confusion about
@@ -408,10 +428,10 @@ export default function LandingPage() {
               >
                 <div className="flex items-center gap-3 mb-4">
                   <span
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
-                    style={{ background: 'rgba(212,150,10,0.18)' }}
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}
                   >
-                    {card.icon}
+                    <QualifyIcon type={card.icon} />
                   </span>
                   <h3 className="text-white font-bold text-sm">{card.title}</h3>
                 </div>
