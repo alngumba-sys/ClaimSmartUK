@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import Layout from '../components/Layout'
 
-// UK postcode format (partial or full) — case-insensitive
+// UK postcode format — case-insensitive
 const POSTCODE_RE = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i
 
 const QUESTIONS = [
@@ -89,29 +88,10 @@ const QUESTIONS = [
     },
   },
   {
-    key: 'region',
-    title: 'Which region of the UK are you in?',
-    options: [
-      'London',
-      'South East',
-      'South West',
-      'Midlands',
-      'North of England',
-      'Wales',
-      'Scotland',
-      'Northern Ireland',
-    ],
-    hint: {
-      note: 'Choose where you live, not where you work. Your region determines your Local Housing Allowance rate — the next question lets you give your postcode for an even more accurate figure.',
-    },
-  },
-  {
     key: 'postcode',
-    type: 'text',
-    title: 'What is the first part of your postcode?',
-    subtitle: 'Optional — gives you a more accurate housing benefit estimate based on local rates.',
-    placeholder: 'e.g. LS1, SW1A or M1 1AA',
-    optional: true,
+    type: 'postcode',
+    title: 'Finally — what\u2019s your postcode?',
+    subtitle: 'We use this to find your local council\u2019s exact benefit rates for Council Tax Reduction and housing support. This makes your results significantly more accurate.',
   },
 ]
 
@@ -122,22 +102,29 @@ const PAGE_BG = {
 
 export default function QuestionFlow() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { signInWithGoogle } = useAuth()
-  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const postcodeQIndex = QUESTIONS.length - 1
+  const [currentQuestion, setCurrentQuestion] = useState(
+    searchParams.get('restart') === 'true' ? postcodeQIndex : 0
+  )
   const [answers, setAnswers] = useState({})
   const [showSignIn, setShowSignIn] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // Postcode state
   const [postcodeInput, setPostcodeInput] = useState('')
   const [postcodeError, setPostcodeError] = useState('')
+  const [postcodeResult, setPostcodeResult] = useState(null) // { council, region, constituency }
+  const [postcodeLooking, setPostcodeLooking] = useState(false)
+  const [niPostcode, setNiPostcode] = useState(false)
   const postcodeRef = useRef(null)
+  const debounceRef = useRef(null)
 
   useEffect(() => {
     const saved = sessionStorage.getItem('claimsmart_answers')
     if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setAnswers(parsed)
-      } catch {}
+      try { setAnswers(JSON.parse(saved)) } catch {}
     }
   }, [])
 
@@ -146,6 +133,54 @@ export default function QuestionFlow() {
       sessionStorage.setItem('claimsmart_answers', JSON.stringify(answers))
     }
   }, [answers])
+
+  // Postcodes.io lookup — debounced 600ms
+  const lookupPostcode = useCallback((value) => {
+    clearTimeout(debounceRef.current)
+    const trimmed = value.trim().toUpperCase()
+    setPostcodeResult(null)
+    setPostcodeError('')
+    setNiPostcode(false)
+
+    // Empty input — reset everything
+    if (!trimmed) {
+      setPostcodeLooking(false)
+      return
+    }
+
+    // Wait for full postcode before calling API
+    if (!POSTCODE_RE.test(trimmed)) {
+      setPostcodeLooking(false)
+      return
+    }
+
+    setPostcodeLooking(true)
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const encoded = encodeURIComponent(trimmed.replace(/\s/g, ''))
+        const res = await fetch(`https://api.postcodes.io/postcodes/${encoded}`)
+        const data = await res.json()
+        if (data.status === 200 && data.result) {
+          const isNI = /^BT/i.test(trimmed)
+          setNiPostcode(isNI)
+          setPostcodeResult({
+            council: data.result.admin_district || 'Unknown',
+            region: data.result.region || data.result.country || 'Unknown',
+            constituency: data.result.parliamentary_constituency || null,
+          })
+          setPostcodeError('')
+        } else {
+          setPostcodeResult(null)
+          setPostcodeError('Postcode not found. You can skip and we\u2019ll use a regional estimate.')
+        }
+      } catch {
+        setPostcodeResult(null)
+        setPostcodeError('Postcode not found. You can skip and we\u2019ll use a regional estimate.')
+      } finally {
+        setPostcodeLooking(false)
+      }
+    }, 600)
+  }, [])
 
   function handleSelect(option) {
     const question = QUESTIONS[currentQuestion]
@@ -164,23 +199,32 @@ export default function QuestionFlow() {
   function handleBack() {
     if (currentQuestion > 0) {
       setPostcodeError('')
+      setPostcodeResult(null)
+      setPostcodeInput('')
+      setNiPostcode(false)
       setCurrentQuestion(currentQuestion - 1)
     }
   }
 
   function handlePostcodeSubmit(skip = false) {
-    const question = QUESTIONS[currentQuestion]
-    if (!skip) {
-      const trimmed = postcodeInput.trim().toUpperCase()
-      if (trimmed && !POSTCODE_RE.test(trimmed)) {
-        setPostcodeError('Please enter a valid UK postcode (e.g. LS1 1AB) or skip.')
-        return
-      }
-      const updated = { ...answers, [question.key]: trimmed || null }
-      setAnswers(updated)
-    } else {
-      // skipped — store null
-      setAnswers({ ...answers, [question.key]: null })
+    if (skip) {
+      setAnswers({
+        ...answers,
+        postcode: null,
+        postcodeProvided: false,
+        council: null,
+        constituency: null,
+        region: 'Unknown',
+      })
+    } else if (postcodeResult) {
+      setAnswers({
+        ...answers,
+        postcode: null,
+        postcodeProvided: true,
+        council: postcodeResult.council,
+        region: postcodeResult.region,
+        constituency: postcodeResult.constituency,
+      })
     }
     setShowSignIn(true)
   }
@@ -306,7 +350,7 @@ export default function QuestionFlow() {
 
   const question = QUESTIONS[currentQuestion]
   const progress = ((currentQuestion + 1) / QUESTIONS.length) * 100
-  const isPostcodeQuestion = question.type === 'text'
+  const isPostcodeQuestion = question.type === 'postcode'
 
   return (
     <div className="min-h-screen" style={PAGE_BG}>
@@ -348,7 +392,7 @@ export default function QuestionFlow() {
           {question.title}
         </h2>
 
-        {/* Postcode subtitle */}
+        {/* Subtitle */}
         {question.subtitle && (
           <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.45)' }}>
             {question.subtitle}
@@ -364,7 +408,6 @@ export default function QuestionFlow() {
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            {/* ℹ icon */}
             <span
               className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5"
               style={{ background: 'rgba(212,150,10,0.25)', color: '#f0c040' }}
@@ -372,7 +415,6 @@ export default function QuestionFlow() {
             >i</span>
 
             <div className="min-w-0 space-y-2">
-              {/* Include / Exclude columns */}
               {(question.hint.include || question.hint.exclude) && (
                 <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
                   {question.hint.include && (
@@ -381,7 +423,7 @@ export default function QuestionFlow() {
                       <ul className="space-y-0.5">
                         {question.hint.include.map(item => (
                           <li key={item} className="text-xs leading-snug flex gap-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                            <span style={{ color: 'rgba(212,150,10,0.6)' }}>✓</span>{item}
+                            <span style={{ color: 'rgba(212,150,10,0.6)' }}>{'\u2713'}</span>{item}
                           </li>
                         ))}
                       </ul>
@@ -393,7 +435,7 @@ export default function QuestionFlow() {
                       <ul className="space-y-0.5">
                         {question.hint.exclude.map(item => (
                           <li key={item} className="text-xs leading-snug flex gap-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                            <span style={{ color: 'rgba(248,113,113,0.6)' }}>✕</span>{item}
+                            <span style={{ color: 'rgba(248,113,113,0.6)' }}>{'\u2715'}</span>{item}
                           </li>
                         ))}
                       </ul>
@@ -402,12 +444,8 @@ export default function QuestionFlow() {
                 </div>
               )}
 
-              {/* Note */}
               {question.hint.note && (
-                <p
-                  className="text-xs leading-relaxed"
-                  style={{ color: 'rgba(255,255,255,0.5)' }}
-                >
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
                   {question.hint.note}
                 </p>
               )}
@@ -415,10 +453,9 @@ export default function QuestionFlow() {
           </div>
         )}
 
-        {/* Spacer when no hint and no subtitle (shouldn't occur but keeps layout consistent) */}
         {!question.hint && !question.subtitle && <div className="mb-5" />}
 
-        {/* Postcode text input */}
+        {/* Postcode input screen */}
         {isPostcodeQuestion ? (
           <div>
             <input
@@ -427,27 +464,97 @@ export default function QuestionFlow() {
               autoComplete="postal-code"
               autoCapitalize="characters"
               value={postcodeInput}
-              onChange={e => { setPostcodeInput(e.target.value); setPostcodeError('') }}
-              onKeyDown={e => { if (e.key === 'Enter') handlePostcodeSubmit(false) }}
-              placeholder={question.placeholder}
+              onChange={e => {
+                const val = e.target.value.toUpperCase()
+                setPostcodeInput(val)
+                setPostcodeError('')
+                lookupPostcode(val)
+              }}
+              onKeyDown={e => { if (e.key === 'Enter' && postcodeResult) handlePostcodeSubmit(false) }}
+              placeholder="e.g. M14 5RZ"
               className="w-full px-4 py-4 rounded-xl text-sm sm:text-base font-medium outline-none"
               style={{
                 background: 'rgba(255,255,255,0.08)',
-                border: postcodeError ? '2px solid #f87171' : '2px solid rgba(255,255,255,0.2)',
+                border: postcodeResult
+                  ? '2px solid #4ade80'
+                  : postcodeError
+                    ? '2px solid #f87171'
+                    : '2px solid rgba(255,255,255,0.2)',
                 color: 'white',
                 caretColor: '#f0c040',
               }}
             />
-            {postcodeError && (
+
+            {/* Lookup spinner */}
+            {postcodeLooking && (
+              <div className="flex items-center gap-2 mt-2">
+                <div
+                  className="w-3 h-3 border-2 border-t-transparent rounded-full animate-spin"
+                  style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: 'transparent' }}
+                />
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>Looking up postcode...</p>
+              </div>
+            )}
+
+            {/* Success — council name */}
+            {postcodeResult && !postcodeLooking && (
+              <div className="flex items-center gap-2 mt-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#4ade80" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-xs" style={{ color: '#4ade80' }}>
+                  {postcodeResult.council}, {postcodeResult.region}
+                </p>
+              </div>
+            )}
+
+            {/* Northern Ireland note */}
+            {niPostcode && postcodeResult && !postcodeLooking && (
+              <div
+                className="rounded-xl px-4 py-3 mt-3 flex gap-3"
+                style={{
+                  background: 'rgba(96,165,250,0.08)',
+                  border: '1px solid rgba(96,165,250,0.2)',
+                }}
+              >
+                <span className="flex-shrink-0 mt-0.5 text-sm" style={{ color: '#60a5fa' }}>{'\u2139\uFE0F'}</span>
+                <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                  Northern Ireland uses different benefit rates — your report will note where rules differ.
+                </p>
+              </div>
+            )}
+
+            {/* Error */}
+            {postcodeError && !postcodeLooking && (
               <p className="text-xs mt-2" style={{ color: '#f87171' }}>{postcodeError}</p>
             )}
+
+            {/* Optional notice */}
+            <div
+              className="rounded-xl px-4 py-3 mt-5 flex gap-3"
+              style={{
+                background: 'rgba(212,150,10,0.08)',
+                border: '1px solid rgba(212,150,10,0.2)',
+              }}
+            >
+              <span className="flex-shrink-0 mt-0.5">{'\u2139\uFE0F'}</span>
+              <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                This field is optional. If you skip it, we'll use a regional estimate which may be less accurate
+                for housing-related benefits. Skipping will not affect your eligibility check.
+              </p>
+            </div>
+
+            {/* Continue button — enabled only when postcode verified */}
             <button
               onClick={() => handlePostcodeSubmit(false)}
-              className="w-full mt-4 py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-80"
+              disabled={!postcodeResult}
+              className="w-full mt-5 py-3.5 rounded-xl font-semibold text-sm transition-opacity hover:opacity-90 disabled:opacity-40"
               style={{ background: 'linear-gradient(135deg, #d4960a, #f0c040)', color: '#0f0722' }}
             >
-              Continue
+              Continue with this postcode
             </button>
+
+            {/* Skip link */}
             <button
               onClick={() => handlePostcodeSubmit(true)}
               className="w-full mt-3 text-sm transition-opacity hover:opacity-80"
@@ -455,6 +562,12 @@ export default function QuestionFlow() {
             >
               Skip — use regional estimate instead
             </button>
+
+            {/* Privacy note */}
+            <p className="text-center mt-6 text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              Your postcode is used only to calculate local benefit rates.
+              It is never stored, sold, or shared. We only keep the council name and region — not your postcode itself.
+            </p>
           </div>
         ) : (
           /* Multiple-choice options */

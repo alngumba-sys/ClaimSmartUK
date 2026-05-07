@@ -548,9 +548,6 @@ export default function LandingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
-          <p className="text-xs mt-6" style={{ color: 'rgba(15,7,34,0.4)' }}>
-            Results are estimates only. Always confirm with DWP or Citizens Advice before claiming.
-          </p>
         </div>
       </section>
 

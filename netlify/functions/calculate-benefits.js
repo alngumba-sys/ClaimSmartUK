@@ -42,14 +42,28 @@ const VALID_ANSWERS = {
   income: ['Under £500', '£500 to £1,000', '£1,000 to £1,500', '£1,500 to £2,500', 'Over £2,500'],
   savings: ['No savings', 'Under £1,000', '£1,000 to £6,000', '£6,000 to £16,000', 'Over £16,000'],
   health: ['No health conditions', 'Yes — affects daily living', 'Yes — unable to work', 'Yes — need care from others'],
-  region: ['London', 'South East', 'South West', 'Midlands', 'North of England', 'Wales', 'Scotland', 'Northern Ireland'],
 }
+
+// Region can be any string from Postcodes.io or 'Unknown' when skipped
+const KNOWN_REGIONS = new Set([
+  'London', 'South East', 'South West', 'East Midlands', 'West Midlands', 'Midlands',
+  'North East', 'North West', 'North of England', 'Yorkshire and The Humber',
+  'East of England', 'Wales', 'Scotland', 'Northern Ireland', 'Unknown',
+])
 
 function validateAnswers(answers) {
   if (!answers || typeof answers !== 'object') return false
   for (const [key, validOptions] of Object.entries(VALID_ANSWERS)) {
     if (!validOptions.includes(answers[key])) return false
   }
+  // Region: accept any string from Postcodes.io or 'Unknown' when skipped
+  const region = answers.region
+  if (!region || typeof region !== 'string' || region.length > 100) return false
+  // council and constituency are optional free-text strings from Postcodes.io
+  if (answers.council && (typeof answers.council !== 'string' || answers.council.length > 100)) return false
+  if (answers.constituency && (typeof answers.constituency !== 'string' || answers.constituency.length > 100)) return false
+  // postcodeProvided must be a boolean if present
+  if (answers.postcodeProvided !== undefined && typeof answers.postcodeProvided !== 'boolean') return false
   return true
 }
 
@@ -66,18 +80,37 @@ const PENSION_AGE     = '65 or over'
 const CARER_SITUATION = 'Carer for someone'
 const HEALTH_OPTIONS  = new Set(['Yes — affects daily living', 'Yes — unable to work', 'Yes — need care from others'])
 
+// Map Postcodes.io region names to the keys used in housingByRegion
+const REGION_MAP = {
+  'London':                    'London',
+  'South East':                'South East',
+  'South West':                'South West',
+  'East Midlands':             'Midlands',
+  'West Midlands':             'Midlands',
+  'Midlands':                  'Midlands',
+  'North East':                'North of England',
+  'North West':                'North of England',
+  'North of England':          'North of England',
+  'Yorkshire and The Humber':  'North of England',
+  'East of England':           'South East',
+  'Wales':                     'Wales',
+  'Scotland':                  'Scotland',
+  'Northern Ireland':          'Northern Ireland',
+}
+
+function mapRegion(region) {
+  return REGION_MAP[region] || null
+}
+
 /** Compute the absolute maximum UC payable given these quiz answers (no taper, all elements). */
 function maxPossibleUC(answers) {
   const r = RATES.universalCredit
-  // Standard allowance — use couple25Plus as upper bound regardless of situation
   const std     = answers.age === 'Under 25' ? r.singleUnder25 : r.couple25Plus
-  // Housing element — use the user's actual region; fall back to highest (London)
+  const mappedRegion = mapRegion(answers.region)
   const housing = RENTING_OPTIONS.has(answers.housing)
-    ? (r.housingByRegion[answers.region] ?? Math.max(...Object.values(r.housingByRegion)))
+    ? (r.housingByRegion[mappedRegion] ?? Math.max(...Object.values(r.housingByRegion)))
     : 0
-  // Child elements
   const children = (CHILD_COUNT[answers.children] ?? 0) * r.childElement
-  // Health — always budget for LCWRA (the higher tier) as a ceiling
   const health = r.limitedCapacityWorkActivity
   return std + housing + children + health
 }
@@ -247,18 +280,12 @@ const SYSTEM_PROMPT = buildSystemPrompt()
 // Uses the same BRMA_RATES / LA_TO_BRMA tables from lha-lookup.js
 // so no extra HTTP call is needed — just an internal function call.
 // ---------------------------------------------------------------------------
-async function resolveActualLHA(postcode, answers) {
-  if (!postcode) return null
-
-  const normalised = postcode.replace(/\s+/g, '').toUpperCase()
-  if (!/^[A-Z]{1,2}[0-9][0-9A-Z]?[0-9][A-Z]{2}$/.test(normalised)) return null
+async function resolveActualLHA(answers) {
+  // Use council name from Postcodes.io (resolved client-side) for LHA lookup
+  const councilName = answers.council
+  if (!councilName || councilName === 'Unknown') return null
 
   try {
-    const res  = await fetch(`https://api.postcodes.io/postcodes/${normalised}`)
-    const json = await res.json()
-    if (json.status !== 200 || !json.result) return null
-
-    const councilName = json.result.admin_district
     const brmaName    = LA_TO_BRMA[councilName]
     const brmaRates   = brmaName ? BRMA_RATES[brmaName] : null
     if (!brmaRates) return null
@@ -267,7 +294,7 @@ async function resolveActualLHA(postcode, answers) {
     const lhaMonthly = parseFloat((brmaRates[bedroomCat] ?? brmaRates.onebed).toFixed(2))
     return { lhaMonthly, brma: brmaName, bedroomCat, councilName }
   } catch (err) {
-    console.warn('[lha-lookup] postcodes.io error:', err.message)
+    console.warn('[lha-lookup] error:', err.message)
     return null
   }
 }
@@ -311,15 +338,19 @@ exports.handler = async (event) => {
   try {
     // If a postcode was provided, resolve the actual LHA rate for their BRMA.
     // This overrides the regional estimate in the system prompt.
-    const lhaData = await resolveActualLHA(answers.postcode, answers)
+    const lhaData = await resolveActualLHA(answers)
 
     const systemPrompt = lhaData
       ? buildSystemPrompt({ lhaOverride: lhaData.lhaMonthly, brma: lhaData.brma, bedroomCat: lhaData.bedroomCat })
       : SYSTEM_PROMPT
 
-    const locationLine = lhaData
-      ? `- Location: ${lhaData.councilName} (${lhaData.brma} BRMA — actual LHA rate ${lhaData.bedroomCat} = £${lhaData.lhaMonthly}/mo)`
-      : `- Region: ${answers.region}`
+    const locationContext = answers.postcodeProvided
+      ? `Location: ${answers.council}, ${answers.region} (postcode verified)`
+      : `Location: ${answers.region || 'UK'} (regional estimate only — results for housing and council tax benefits may be less accurate)`
+
+    const locationGuidance = answers.postcodeProvided
+      ? `Use ${answers.council} council rates for Council Tax Reduction.\nUse ${answers.region} Local Housing Allowance rates.`
+      : `Use regional average estimates for Council Tax Reduction and Local Housing Allowance. Note in each benefit's explanation that rates vary by council and the user should verify locally.`
 
     const userMessage = `Circumstances:
 - Employment status: ${answers.situation}
@@ -329,9 +360,11 @@ exports.handler = async (event) => {
 - Monthly income (after tax): ${answers.income}
 - Savings: ${answers.savings}
 - Health: ${answers.health}
-${locationLine}
+- ${locationContext}${lhaData ? `\n- LHA: ${lhaData.brma} BRMA — actual rate ${lhaData.bedroomCat} = £${lhaData.lhaMonthly}/mo` : ''}
 
-Calculate all UK benefits this person likely qualifies for based on these circumstances.`
+${locationGuidance}
+
+Calculate all UK benefits this person likely qualifies for.`
 
     const message = await client.messages.create({
       model: 'claude-sonnet-4-5',

@@ -177,7 +177,13 @@ Step 5 — UC payable = max(0, uc_before_taper − taper_reduction)
 - ONLY include formal DWP/HMRC benefits with published fixed rates: UC, Child Benefit, PIP, Carer's Allowance (carers only), Council Tax Reduction, Free School Meals, Healthy Start, Pension Credit, Attendance Allowance
 - Do NOT include discretionary or non-cash items: Discretionary Housing Payment, NHS dental/prescriptions/eye tests, Household Support Fund, food banks, emergency payments
 - Return 4-8 benefits total; never list the same benefit twice
-- Mark all results as estimates`
+- Mark all results as estimates
+
+=== LOCATION CONTEXT ===
+The user may provide a verified council and region (from postcode lookup) or only a regional estimate.
+- If "postcode verified": use the specific council for Council Tax Reduction and the region for LHA rates. Be precise.
+- If "regional estimate only": use regional averages but add a note in each housing/council-tax benefit explanation that exact rates vary by local council and the user should check with their council directly.
+- Northern Ireland has separate benefit rules for some items — if region is Northern Ireland, note where NI rules differ (e.g. UC is administered by DfC not DWP, rates may differ slightly).`
 }
 
 module.exports = { RATES, buildSystemPrompt }

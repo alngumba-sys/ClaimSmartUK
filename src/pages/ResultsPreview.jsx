@@ -126,6 +126,41 @@ export default function ResultsPreview() {
             </div>
           )}
 
+          {/* Location badge */}
+          {savedAnswers.postcodeProvided ? (
+            <div className="flex items-center gap-1.5 text-xs mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="#4ade80" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <span>
+                Rates calculated for <strong className="text-white">{savedAnswers.council}</strong>
+              </span>
+            </div>
+          ) : (
+            <div
+              className="flex items-center gap-1.5 text-xs rounded-lg px-3 py-2 mb-4"
+              style={{
+                background: 'rgba(212,150,10,0.08)',
+                border: '1px solid rgba(212,150,10,0.2)',
+                color: 'rgba(212,150,10,0.8)',
+              }}
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                Using regional estimates —{' '}
+                <button
+                  onClick={() => navigate('/check?restart=true')}
+                  className="underline ml-1 hover:opacity-80"
+                >
+                  add your postcode for more accurate results
+                </button>
+              </span>
+            </div>
+          )}
+
           {benefits.map((benefit, i) =>
             i < 2 ? (
               /* Visible benefit card */

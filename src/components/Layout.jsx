@@ -122,10 +122,6 @@ export default function Layout({ children, showNav = true }) {
 
       <footer style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.07)' }} className="py-8">
         <div className="max-w-5xl mx-auto px-4 text-center">
-          <p className="text-xs sm:text-sm mb-3 leading-relaxed" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Results are estimates only, based on DWP rates April 2026/27. Always confirm with DWP or Citizens Advice.
-            ClaimSmart UK is not a financial adviser.
-          </p>
           <div className="flex justify-center flex-wrap gap-3 sm:gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <span>·</span>
