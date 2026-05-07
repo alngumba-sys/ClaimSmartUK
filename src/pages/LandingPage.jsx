@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { useDWPStats } from '../hooks/useDWPStats'
 
 // ─── data ───────────────────────────────────────────────────────────────────
 
@@ -54,11 +55,12 @@ const steps = [
   },
 ]
 
-const bigStats = [
-  { value: '£24B', label: 'Unclaimed every year', sub: 'DWP estimate · 2026' },
-  { value: '7M+',  label: 'Households missing out', sub: 'UK-wide · all income levels' },
-  { value: '£3,428', label: 'Average missed per home', sub: 'Per year · after tax' },
-  { value: '8 min', label: 'To check your entitlement', sub: 'No login required to start' },
+// Static DWP published figures (not from Stat-Xplore — these are policy estimates)
+const STATIC_STATS = [
+  { value: '£24B',   label: 'Unclaimed every year',      sub: 'DWP estimate · 2026' },
+  { value: '7M+',    label: 'Households missing out',    sub: 'UK-wide · all income levels' },
+  { value: '£3,428', label: 'Average missed per home',   sub: 'Per year · after tax' },
+  { value: '8 min',  label: 'To check your entitlement', sub: 'No login required to start' },
 ]
 
 const comparisonRows = [
@@ -149,7 +151,43 @@ function GoldCheck() {
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
+function fmtM(n) {
+  if (!n) return null
+  const m = (n / 1_000_000).toFixed(1)
+  return `${m}M`
+}
+
 export default function LandingPage() {
+  const { stats } = useDWPStats()
+
+  // Live claimant stats — shown when Stat-Xplore data is available
+  const liveStats = stats ? [
+    stats.uc?.totalClaimants && {
+      value: `${fmtM(stats.uc.totalClaimants)}`,
+      label: 'People currently on Universal Credit',
+      sub: `Live data · DWP Stat-Xplore · ${stats.meta?.referenceDate || ''}`,
+      live: true,
+    },
+    stats.pip?.totalClaimants && {
+      value: `${fmtM(stats.pip.totalClaimants)}`,
+      label: 'People receiving PIP support',
+      sub: 'Personal Independence Payment · live data',
+      live: true,
+    },
+    stats.pensionCredit?.totalClaimants && {
+      value: `${fmtM(stats.pensionCredit.totalClaimants)}`,
+      label: 'Pension Credit claimants',
+      sub: `~${fmtM(stats.pensionCredit.estimatedEligibleNotClaiming || 850000)} eligible not claiming`,
+      live: true,
+    },
+    stats.carersAllowance?.totalClaimants && {
+      value: `${fmtM(stats.carersAllowance.totalClaimants)}`,
+      label: "Receiving Carer's Allowance",
+      sub: 'Many more eligible but unclaimed',
+      live: true,
+    },
+  ].filter(Boolean) : []
+
   return (
     <Layout>
 
@@ -206,8 +244,8 @@ export default function LandingPage() {
 
       {/* ── Big stats ─────────────────────────────────────────────────────── */}
       <section style={{ background: '#1a0f3c', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          {bigStats.map((s) => (
+        <div className="max-w-5xl mx-auto px-4 pt-12 pb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+          {STATIC_STATS.map((s) => (
             <div
               key={s.label}
               className="rounded-xl p-5"
@@ -219,6 +257,37 @@ export default function LandingPage() {
             </div>
           ))}
         </div>
+
+        {/* Live DWP claimant counts — shown only when Stat-Xplore data loaded */}
+        {liveStats.length > 0 && (
+          <div className="max-w-5xl mx-auto px-4 pb-10">
+            <div className="flex items-center gap-2 mb-3">
+              <span
+                className="w-1.5 h-1.5 rounded-full animate-pulse"
+                style={{ background: '#4ade80' }}
+              />
+              <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                Live data from DWP Stat-Xplore
+              </span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {liveStats.map((s) => (
+                <div
+                  key={s.label}
+                  className="rounded-xl p-4"
+                  style={{
+                    background: 'rgba(212,150,10,0.06)',
+                    border: '1px solid rgba(212,150,10,0.2)',
+                  }}
+                >
+                  <p className="text-2xl font-extrabold" style={{ color: '#f0c040' }}>{s.value}</p>
+                  <p className="text-white text-xs font-semibold mt-1 leading-snug">{s.label}</p>
+                  <p className="text-xs mt-0.5 leading-snug" style={{ color: 'rgba(255,255,255,0.3)' }}>{s.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* ── The Trap ──────────────────────────────────────────────────────── */}
@@ -481,6 +550,20 @@ export default function LandingPage() {
           </Link>
           <p className="text-xs mt-6" style={{ color: 'rgba(15,7,34,0.4)' }}>
             Results are estimates only. Always confirm with DWP or Citizens Advice before claiming.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Legal disclaimer ──────────────────────────────────────────────── */}
+      <section style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.06)' }} className="py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs leading-relaxed text-center" style={{ color: 'rgba(255,255,255,0.35)' }}>
+            Results are estimates based on current DWP rates (April 2026/27) and the information you provided.
+            Actual entitlement depends on your full individual circumstances, which only DWP can assess.
+            ClaimSmart UK is not a benefits adviser or financial adviser. Always confirm your entitlement
+            directly with DWP (<span style={{ color: 'rgba(255,255,255,0.5)' }}>0800 328 5644</span>) or Citizens
+            Advice (<span style={{ color: 'rgba(255,255,255,0.5)' }}>0800 144 8848</span>) before making any
+            financial decisions.
           </p>
         </div>
       </section>

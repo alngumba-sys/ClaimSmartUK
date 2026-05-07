@@ -4,6 +4,7 @@ import DashboardLayout from '../components/DashboardLayout'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { formatGBP } from '../data/benefitsRates2026'
+import { getInteractionWarnings } from '../data/benefitInteractions'
 
 const STATUS_OPTIONS = [
   { value: 'not_started', label: 'Not started', color: 'bg-gray-100 text-gray-600' },
@@ -91,6 +92,7 @@ export default function Dashboard() {
   const benefits = report.benefits || []
   const claimedCount = Object.values(claimStatuses).filter(s => s.status === 'claimed').length
   const totalMonthly = report.total_monthly_pence / 100
+  const interactions = getInteractionWarnings(benefits.map(b => b.name))
 
   return (
     <DashboardLayout>
@@ -164,6 +166,46 @@ export default function Dashboard() {
           })}
         </div>
 
+        {/* Benefit interaction warnings */}
+        {interactions.length > 0 && (
+          <div className="mb-8 space-y-3">
+            <h2 className="text-base font-medium text-gray-900 mb-3">Important: benefit interactions</h2>
+            {interactions.map(w => (
+              <div
+                key={w.id}
+                className="rounded-xl p-4 flex items-start gap-3"
+                style={
+                  w.severity === 'warning'
+                    ? { background: '#fffbeb', border: '1px solid #fcd34d' }
+                    : { background: '#eff6ff', border: '1px solid #bfdbfe' }
+                }
+              >
+                <span className="text-base flex-shrink-0 mt-0.5">
+                  {w.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                </span>
+                <div className="min-w-0">
+                  <p
+                    className="text-sm font-semibold mb-1"
+                    style={{ color: w.severity === 'warning' ? '#92400e' : '#1e40af' }}
+                  >
+                    {w.headline}
+                  </p>
+                  <p className="text-xs text-gray-600 leading-relaxed">{w.body}</p>
+                  <a
+                    href={w.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1.5 text-xs underline hover:no-underline inline-block"
+                    style={{ color: w.severity === 'warning' ? '#d97706' : '#2563eb' }}
+                  >
+                    {w.linkText} →
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Re-check CTA */}
         <div className="bg-teal-50 rounded-2xl p-6">
           <h3 className="font-medium text-teal-800 mb-1">Circumstances changed?</h3>
@@ -174,6 +216,18 @@ export default function Dashboard() {
           >
             Re-check my entitlement — £4
           </Link>
+        </div>
+
+        {/* Legal disclaimer */}
+        <div className="mt-6 rounded-xl p-4 bg-gray-50 border border-gray-200">
+          <p className="text-xs leading-relaxed text-gray-500">
+            Results are estimates based on current DWP rates (April 2026/27) and the information you provided.
+            Actual entitlement depends on your full individual circumstances, which only DWP can assess.
+            ClaimSmart UK is not a benefits adviser or financial adviser. Always confirm your entitlement
+            directly with DWP (<span className="text-gray-700 font-medium">0800 328 5644</span>) or Citizens
+            Advice (<span className="text-gray-700 font-medium">0800 144 8848</span>) before making any
+            financial decisions.
+          </p>
         </div>
       </div>
     </DashboardLayout>

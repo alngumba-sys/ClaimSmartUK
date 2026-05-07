@@ -42,7 +42,22 @@ exports.handler = async (event) => {
     from: 'ClaimSmart UK <reports@claimsmart.uk>',
     to: email,
     subject: 'Your ClaimSmart benefits report (resent)',
-    html: '<p>Please find your ClaimSmart benefits report attached.</p>',
+    html: `
+      <div style="font-family: Inter, sans-serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; color: #2C2C2A;">
+        <div style="background: #0F6E56; padding: 20px 24px; border-radius: 12px 12px 0 0;">
+          <h1 style="color: white; font-size: 18px; margin: 0; font-weight: 500;">ClaimSmart UK</h1>
+        </div>
+        <div style="background: #f9f9f9; border: 1px solid #e5e7eb; border-top: 0; border-radius: 0 0 12px 12px; padding: 28px 24px;">
+          <p style="color: #444; line-height: 1.6;">Please find your ClaimSmart benefits report attached as a PDF.</p>
+          <p style="color: #999; font-size: 12px; line-height: 1.6; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+            Results are estimates based on current DWP rates (April 2026/27) and the information you provided.
+            Actual entitlement depends on your full individual circumstances, which only DWP can assess.
+            ClaimSmart UK is not a benefits adviser or financial adviser. Always confirm your entitlement
+            directly with DWP (0800 328 5644) or Citizens Advice (0800 144 8848) before making any financial decisions.
+          </p>
+        </div>
+      </div>
+    `,
     attachments: [{ filename: 'ClaimSmart-Benefits-Report.pdf', content: pdf, encoding: 'base64' }],
   })
 

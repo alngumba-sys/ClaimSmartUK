@@ -75,23 +75,30 @@ alter table public.claim_status enable row level security;
 alter table public.notifications enable row level security;
 alter table public.referrals enable row level security;
 
--- Policies
+-- Policies (drop-then-create so this file is safe to re-run)
+drop policy if exists "Users can view own profile"    on public.profiles;
+drop policy if exists "Users can update own profile"  on public.profiles;
 create policy "Users can view own profile"
   on public.profiles for select using (auth.uid() = id);
 create policy "Users can update own profile"
   on public.profiles for update using (auth.uid() = id);
 
+drop policy if exists "Users can view own reports"   on public.reports;
+drop policy if exists "Users can insert own reports" on public.reports;
 create policy "Users can view own reports"
   on public.reports for all using (auth.uid() = user_id);
 create policy "Users can insert own reports"
   on public.reports for insert with check (auth.uid() = user_id OR user_id IS NULL);
 
+drop policy if exists "Users can manage own claim status" on public.claim_status;
 create policy "Users can manage own claim status"
   on public.claim_status for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can manage own notifications" on public.notifications;
 create policy "Users can manage own notifications"
   on public.notifications for all using (auth.uid() = user_id);
 
+drop policy if exists "Users can view own referrals" on public.referrals;
 create policy "Users can view own referrals"
   on public.referrals for select using (auth.uid() = referrer_id);
 

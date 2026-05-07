@@ -82,8 +82,11 @@ exports.handler = async (event) => {
                   <p style="color: #085041; font-weight: 500; margin: 0 0 4px;">Start here — your highest priority action:</p>
                   <p style="color: #0F6E56; margin: 0; font-size: 14px;">Check page 2 of your report for your personalised action plan.</p>
                 </div>
-                <p style="color: #999; font-size: 12px; line-height: 1.5; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
-                  Results are estimates based on DWP rates April 2026/27. Always confirm your entitlement with DWP or Citizens Advice. ClaimSmart UK is not a financial adviser.
+                <p style="color: #999; font-size: 12px; line-height: 1.6; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px;">
+                  Results are estimates based on current DWP rates (April 2026/27) and the information you provided.
+                  Actual entitlement depends on your full individual circumstances, which only DWP can assess.
+                  ClaimSmart UK is not a benefits adviser or financial adviser. Always confirm your entitlement
+                  directly with DWP (0800 328 5644) or Citizens Advice (0800 144 8848) before making any financial decisions.
                 </p>
               </div>
             </div>

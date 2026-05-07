@@ -67,7 +67,8 @@ exports.handler = async (event) => {
     console.error('Checkout error:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to create checkout session' }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: error.message || 'Failed to create checkout session' }),
     }
   }
 }

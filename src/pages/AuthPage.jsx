@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import Layout from '../components/Layout'
 
 export default function AuthPage() {
   const { user, signInWithGoogle } = useAuth()
@@ -12,23 +11,37 @@ export default function AuthPage() {
   }, [user, navigate])
 
   return (
-    <Layout showNav={false}>
-      <div className="max-w-sm mx-auto mt-12 sm:mt-20 px-4">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ background: 'linear-gradient(135deg, #0f0722 0%, #1a0f3c 60%, #2d1b69 100%)' }}
+    >
+      <div className="w-full max-w-sm">
+
+        {/* Logo mark */}
         <div className="text-center mb-8">
-          <div className="w-10 h-10 bg-teal-600 rounded-md flex items-center justify-center mx-auto mb-4">
-            <span className="text-white text-sm font-bold">CS</span>
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-5"
+            style={{ background: 'linear-gradient(135deg, #d4960a, #f0c040)' }}
+          >
+            <span className="text-xs font-extrabold" style={{ color: '#0f0722' }}>CS</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-medium text-gray-900">Sign in to save your results</h1>
-          <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+          <h1 className="text-2xl font-extrabold text-white">Sign in to save your results</h1>
+          <p className="text-sm mt-2 leading-relaxed" style={{ color: 'rgba(255,255,255,0.5)' }}>
             We only use your email to send your report. We never share your data.
           </p>
         </div>
 
+        {/* Google sign-in */}
         <button
           onClick={signInWithGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 text-gray-700 font-medium py-3.5 px-4 rounded-xl hover:bg-gray-50 transition-colors min-h-[48px]"
+          className="w-full flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl font-semibold text-sm transition-opacity hover:opacity-80 min-h-[48px] mb-5"
+          style={{
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.9)',
+          }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -37,17 +50,23 @@ export default function AuthPage() {
           Continue with Google
         </button>
 
-        <div className="text-center mt-6">
-          <Link to="/check" className="text-sm text-teal-600 hover:text-teal-800">
+        <div className="text-center">
+          <Link
+            to="/check"
+            className="text-sm transition-opacity hover:opacity-80"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+          >
             Or continue without signing in
           </Link>
         </div>
 
-        <p className="text-xs text-gray-400 text-center mt-8">
+        <p className="text-xs text-center mt-8" style={{ color: 'rgba(255,255,255,0.25)' }}>
           By continuing, you agree to our{' '}
-          <Link to="/privacy" className="underline hover:text-gray-600">Privacy Policy</Link>
+          <Link to="/privacy" className="underline hover:opacity-70" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            Privacy Policy
+          </Link>
         </p>
       </div>
-    </Layout>
+    </div>
   )
 }

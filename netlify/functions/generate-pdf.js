@@ -1,5 +1,62 @@
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib')
 
+// ---------------------------------------------------------------------------
+// Benefit interaction rules — mirrors src/data/benefitInteractions.js.
+// Policy-based (not rate-based) so no April update needed.
+// ---------------------------------------------------------------------------
+const INTERACTION_RULES = [
+  {
+    id: 'ca-uc',
+    triggers: ["Carer's Allowance", 'Universal Credit'],
+    severity: 'warning',
+    headline: "Carer's Allowance reduces your Universal Credit",
+    body:
+      "Carer's Allowance is treated as unearned income and deducted pound for pound " +
+      "from your UC award. If you claim both, your total income may not increase. " +
+      "However, CA builds National Insurance credits. Speak to Citizens Advice " +
+      "before claiming both to understand the net impact.",
+  },
+  {
+    id: 'pc-uc',
+    triggers: ['Pension Credit', 'Universal Credit'],
+    severity: 'warning',
+    headline: 'Pension Credit and Universal Credit cannot both be claimed',
+    body:
+      "These are separate systems — Pension Credit (pension age) and Universal Credit " +
+      "(working age) cannot be received at the same time. Claim whichever applies to your age.",
+  },
+  {
+    id: 'pip-ca',
+    triggers: ['Personal Independence Payment', "Carer's Allowance"],
+    severity: 'info',
+    headline: "PIP and Carer's Allowance serve different roles",
+    body:
+      "PIP is paid for your own health condition; CA is paid because you care for someone " +
+      "else. Both can be received at the same time if both conditions apply, but receiving " +
+      "CA may affect the severe disability premium in other means-tested benefits.",
+  },
+  {
+    id: 'aa-ca',
+    triggers: ['Attendance Allowance', "Carer's Allowance"],
+    severity: 'info',
+    headline: "Attendance Allowance and Carer's Allowance serve different roles",
+    body:
+      "Attendance Allowance is paid for your own care needs; CA is paid for caring for " +
+      "someone else. Both can apply, but receiving CA may reduce the severe disability " +
+      "addition in Pension Credit. Confirm with Citizens Advice.",
+  },
+]
+
+function getInteractionWarnings(benefitNames) {
+  if (!benefitNames || benefitNames.length === 0) return []
+  const normalised = benefitNames.map(n => n.toLowerCase())
+  function matches(trigger) {
+    const t = trigger.toLowerCase()
+    return normalised.some(n => n.includes(t) || t.includes(n.split(' ')[0]))
+  }
+  return INTERACTION_RULES.filter(rule => rule.triggers.every(trigger => matches(trigger)))
+}
+
 const TEAL = rgb(0.059, 0.431, 0.337)       // #0F6E56
 const TEAL_LIGHT = rgb(0.882, 0.961, 0.933) // #E1F5EE
 const TEAL_DARK = rgb(0.031, 0.314, 0.255)  // #085041
@@ -14,6 +71,7 @@ exports.handler = async (event) => {
 
   try {
     const { benefits, totalMonthly, totalAnnual, userEmail } = JSON.parse(event.body)
+    const interactions = getInteractionWarnings((benefits || []).map(b => b.name))
 
     const pdfDoc = await PDFDocument.create()
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
@@ -45,7 +103,7 @@ exports.handler = async (event) => {
 
       // Footer
       page.drawText(
-        'Estimates based on DWP rates April 2026/27. Confirm entitlement with DWP or Citizens Advice. ClaimSmart UK is not a financial adviser.',
+        'Results are estimates only. Confirm entitlement with DWP (0800 328 5644) or Citizens Advice (0800 144 8848). ClaimSmart UK is not a benefits adviser or financial adviser.',
         { x: MARGIN, y: 20, size: 7, font, color: GRAY, maxWidth: CONTENT_W }
       )
 
@@ -76,6 +134,30 @@ exports.handler = async (event) => {
       { x: MARGIN + 8, y: y - 22, size: 9, font: fontBold, color: rgb(0.64, 0.17, 0.17), maxWidth: CONTENT_W - 16 }
     )
     y -= 52
+
+    // ── Legal disclaimer box ─────────────────────────────────────────────────
+    const DISCLAIMER_TEXT =
+      'Important: These results are estimates based on current DWP rates (April 2026/27) and the ' +
+      'information you provided. Actual entitlement depends on your full individual circumstances, ' +
+      'which only DWP can assess. ClaimSmart UK is not a benefits adviser or financial adviser. ' +
+      'Always confirm your entitlement directly with DWP (0800 328 5644) or Citizens Advice ' +
+      '(0800 144 8848) before making any financial decisions.'
+    const DISCLAIMER_H = 66
+    const DISCLAIMER_BG  = rgb(0.94, 0.97, 1.0)    // light blue
+    const DISCLAIMER_BDR = rgb(0.75, 0.86, 1.0)    // blue border
+    const DISCLAIMER_TXT = rgb(0.12, 0.25, 0.68)   // dark blue
+    page1.drawRectangle({
+      x: MARGIN, y: y - DISCLAIMER_H, width: CONTENT_W, height: DISCLAIMER_H,
+      color: DISCLAIMER_BG, borderColor: DISCLAIMER_BDR, borderWidth: 0.75,
+    })
+    page1.drawText('LEGAL NOTICE', {
+      x: MARGIN + 8, y: y - 13, size: 7, font: fontBold, color: DISCLAIMER_TXT,
+    })
+    page1.drawText(DISCLAIMER_TEXT, {
+      x: MARGIN + 8, y: y - 25, size: 7.5, font, color: rgb(0.2, 0.3, 0.55),
+      maxWidth: CONTENT_W - 16, lineHeight: 10,
+    })
+    y -= DISCLAIMER_H + 10
 
     // Benefits section heading
     page1.drawText('YOUR BENEFITS BREAKDOWN', {
@@ -194,6 +276,60 @@ exports.handler = async (event) => {
         y2 -= 13
       })
       y2 -= 10
+    }
+
+    // ── Benefit interaction warnings ─────────────────────────────────────────
+    if (interactions.length > 0 && y2 > 80) {
+      y2 -= 10
+      page2.drawText('IMPORTANT — BENEFIT INTERACTIONS', {
+        x: MARGIN, y: y2, size: 9, font: fontBold, color: rgb(0.58, 0.25, 0.0),
+      })
+      y2 -= 16
+
+      for (const w of interactions) {
+        if (y2 < 80) break
+
+        const AMBER_BG  = rgb(1.0,  0.97, 0.88)   // #FFF7E0
+        const AMBER_BDR = rgb(0.98, 0.75, 0.15)   // #FAC025
+        const INFO_BG   = rgb(0.94, 0.97, 1.0)    // #EFF6FF
+        const INFO_BDR  = rgb(0.75, 0.86, 1.0)    // #BFDBFE
+
+        // Estimate box height: headline + wrapped body text
+        // pdf-lib wraps text but doesn't return line count — budget ~14pt per ~70 chars
+        const bodyWords  = w.body.length
+        const lineCount  = Math.ceil(bodyWords / 85) + 1   // rough
+        const boxH       = 18 + lineCount * 11 + 8
+
+        if (y2 - boxH < 40) break
+
+        const bg  = w.severity === 'warning' ? AMBER_BG  : INFO_BG
+        const bdr = w.severity === 'warning' ? AMBER_BDR : INFO_BDR
+        const headColor = w.severity === 'warning' ? rgb(0.58, 0.25, 0.0) : rgb(0.12, 0.25, 0.68)
+        const icon = w.severity === 'warning' ? '⚠' : 'i'
+
+        page2.drawRectangle({
+          x: MARGIN, y: y2 - boxH, width: CONTENT_W, height: boxH,
+          color: bg, borderColor: bdr, borderWidth: 0.75,
+        })
+
+        // Icon placeholder (pdf-lib can't render emoji — use text symbol)
+        page2.drawText(icon, {
+          x: MARGIN + 7, y: y2 - 13, size: 9, font: fontBold, color: headColor,
+        })
+
+        // Headline
+        page2.drawText(w.headline, {
+          x: MARGIN + 20, y: y2 - 13, size: 9, font: fontBold, color: headColor,
+        })
+
+        // Body text (wrapped)
+        page2.drawText(w.body, {
+          x: MARGIN + 8, y: y2 - 26, size: 8, font, color: rgb(0.25, 0.25, 0.25),
+          maxWidth: CONTENT_W - 16, lineHeight: 11,
+        })
+
+        y2 -= boxH + 8
+      }
     }
 
     // Contacts

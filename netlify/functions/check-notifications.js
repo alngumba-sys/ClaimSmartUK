@@ -58,6 +58,12 @@ exports.handler = async () => {
                     You're receiving this because you set up a reminder on ClaimSmart UK.
                     <a href="${process.env.VITE_APP_URL}/notifications" style="color: #0F6E56;">Manage reminders</a>
                   </p>
+                  <p style="color: #bbb; font-size: 11px; line-height: 1.6; margin-top: 12px;">
+                    Results are estimates based on current DWP rates (April 2026/27) and the information you provided.
+                    Actual entitlement depends on your full individual circumstances, which only DWP can assess.
+                    ClaimSmart UK is not a benefits adviser or financial adviser. Always confirm your entitlement
+                    directly with DWP (0800 328 5644) or Citizens Advice (0800 144 8848) before making any financial decisions.
+                  </p>
                 </div>
               </div>
             `,

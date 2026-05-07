@@ -24,3 +24,20 @@
 
 [functions."check-notifications"]
   schedule = "0 8 * * *"
+
+# Refresh DWP Stat-Xplore stats on the 10th of every month at 09:00 UTC
+# (DWP typically publishes new data around the 5th–8th of each month)
+[functions."refresh-dwp-stats"]
+  schedule = "0 9 10 * *"
+
+# Scrape GOV.UK benefit rate pages each April and diff against hardcoded RATES.
+# Runs on 7 April at 08:00 UTC — a few days after the DWP uprating (1 April).
+# Sends an email report to ADMIN_EMAIL listing any changed rates.
+[functions."refresh-rates"]
+  schedule = "0 8 7 4 *"
+
+# Monthly admin maintenance digest — 1st of each month at 09:00 UTC.
+# Emails ADMIN_EMAIL about overdue tasks: spot-checks, complaint reviews,
+# policy changes, and (in April) the annual rates update.
+[functions."check-admin-reminders"]
+  schedule = "0 9 1 * *"
