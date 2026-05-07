@@ -41,3 +41,11 @@
 # policy changes, and (in April) the annual rates update.
 [functions."check-admin-reminders"]
   schedule = "0 9 1 * *"
+
+# Benefits Watch — monthly re-check on 1st of each month at 09:00 UTC
+[functions."send-monthly-watch"]
+  schedule = "0 9 1 * *"
+
+# Benefits Watch — annual rate change alert on 7 April at 09:00 UTC
+[functions."send-annual-watch"]
+  schedule = "0 9 7 4 *"

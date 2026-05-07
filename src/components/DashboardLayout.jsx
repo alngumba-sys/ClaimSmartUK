@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: 'grid' },
+  { path: '/benefits-watch', label: 'Benefits Watch', icon: 'shield' },
   { path: '/calendar', label: 'Calendar', icon: 'calendar' },
   { path: '/notifications', label: 'Notifications', icon: 'bell' },
   { path: '/referrals', label: 'Referrals', icon: 'share' },
@@ -14,6 +15,7 @@ function NavIcon({ type }) {
     grid: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />,
     calendar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />,
     bell: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />,
+    shield: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />,
     share: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />,
   }
   return (
@@ -106,6 +108,9 @@ export default function DashboardLayout({ children }) {
                 >
                   <NavIcon type={item.icon} />
                   {item.label}
+                  {item.icon === 'shield' && profile?.benefits_watch_active && (
+                    <span className="w-2 h-2 rounded-full bg-teal-500 ml-auto flex-shrink-0" />
+                  )}
                 </Link>
               ))}
             </nav>
@@ -167,6 +172,9 @@ export default function DashboardLayout({ children }) {
             >
               <NavIcon type={item.icon} />
               {item.label}
+              {item.icon === 'shield' && profile?.benefits_watch_active && (
+                <span className="w-2 h-2 rounded-full bg-teal-500 ml-auto flex-shrink-0" />
+              )}
             </Link>
           ))}
         </nav>

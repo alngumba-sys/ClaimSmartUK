@@ -21,6 +21,55 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: `Webhook Error: ${err.message}` }
   }
 
+  // ── Benefits Watch subscription activation ────────────────────────────────
+  if (stripeEvent.type === 'checkout.session.completed' &&
+      stripeEvent.data.object.metadata?.product === 'benefits_watch') {
+    const session = stripeEvent.data.object
+    try {
+      const sub = await stripe.subscriptions.retrieve(session.subscription)
+      await supabase.from('profiles').update({
+        benefits_watch_active: true,
+        benefits_watch_started_at: new Date().toISOString(),
+        benefits_watch_stripe_subscription_id: session.subscription,
+        benefits_watch_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+      }).eq('id', session.metadata.user_id)
+    } catch (err) {
+      console.error('Benefits Watch activation error:', err)
+    }
+    return { statusCode: 200, body: 'OK' }
+  }
+
+  // ── Subscription cancelled ────────────────────────────────────────────────
+  if (stripeEvent.type === 'customer.subscription.deleted') {
+    const userId = stripeEvent.data.object.metadata?.user_id
+    if (userId) {
+      await supabase.from('profiles').update({
+        benefits_watch_active: false,
+        benefits_watch_stripe_subscription_id: null,
+        benefits_watch_current_period_end: null,
+      }).eq('id', userId)
+    }
+    return { statusCode: 200, body: 'OK' }
+  }
+
+  // ── Renewal — update period end ───────────────────────────────────────────
+  if (stripeEvent.type === 'invoice.payment_succeeded' &&
+      stripeEvent.data.object.subscription) {
+    try {
+      const sub = await stripe.subscriptions.retrieve(stripeEvent.data.object.subscription)
+      const userId = sub.metadata?.user_id
+      if (userId) {
+        await supabase.from('profiles').update({
+          benefits_watch_current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+        }).eq('id', userId)
+      }
+    } catch (err) {
+      console.error('Renewal period update error:', err)
+    }
+    return { statusCode: 200, body: 'OK' }
+  }
+
+  // ── Report purchase ───────────────────────────────────────────────────────
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object
     const { report_id, user_id, referral_code, total_monthly } = session.metadata

@@ -327,13 +327,15 @@ export default function AdminDashboard() {
         {activeTab === 'overview' && stats && (
           <>
             {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
               {[
                 { label: 'Total users', value: stats.totalUsers.toLocaleString() },
                 { label: 'Paid reports', value: stats.totalReports.toLocaleString() },
                 { label: 'Revenue', value: formatGBP(stats.totalRevenuePence / 100) },
                 { label: 'Avg benefits found', value: String(stats.avgBenefits) },
                 { label: 'Avg monthly found', value: formatGBP(stats.avgMonthly) },
+                { label: 'Watch subscribers', value: String(stats.watchSubscribers || 0) },
+                { label: 'Watch MRR', value: formatGBP(stats.watchMRR || 0) },
               ].map(s => (
                 <div key={s.label} className="bg-white border border-gray-200 rounded-xl p-4">
                   <p className="text-xs text-gray-400 mb-1">{s.label}</p>
@@ -343,6 +345,24 @@ export default function AdminDashboard() {
             </div>
 
             {/* Charts */}
+            {/* Benefits Watch admin trigger */}
+            <div className="flex gap-3 mb-6">
+              <button
+                onClick={async () => {
+                  const token = sessionStorage.getItem('adminToken')
+                  await fetch('/.netlify/functions/run-benefits-watch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+                    body: JSON.stringify({ alertType: 'rate_change' }),
+                  })
+                  alert('Watch run triggered')
+                }}
+                className="text-sm bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-800 transition-colors"
+              >
+                Trigger Watch Run
+              </button>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-4 mb-6">
               <div className="bg-white border border-gray-200 rounded-xl p-4">
                 <h3 className="text-sm font-medium text-gray-700 mb-3">Daily signups (last 14 days)</h3>

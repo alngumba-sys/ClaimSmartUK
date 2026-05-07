@@ -90,6 +90,12 @@ exports.handler = async (event) => {
       .order('created_at', { ascending: false })
       .limit(50)
 
+    // Benefits Watch subscribers
+    const { count: watchSubscribers } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('benefits_watch_active', true)
+
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -103,6 +109,8 @@ exports.handler = async (event) => {
         dailySignups,
         recentTransactions,
         users: users || [],
+        watchSubscribers: watchSubscribers || 0,
+        watchMRR: (watchSubscribers || 0) * 3.99,
       }),
     }
   } catch (err) {

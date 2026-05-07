@@ -2,12 +2,18 @@ import { useEffect, useState } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useAuth } from '../contexts/AuthContext'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
 
 export default function SuccessPage() {
   const [searchParams] = useSearchParams()
   const [status, setStatus] = useState('loading') // loading | complete | error
   const [sessionData, setSessionData] = useState(null)
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const sessionId = searchParams.get('session_id')
 
   useEffect(() => {
@@ -204,6 +210,30 @@ export default function SuccessPage() {
             </Link>
           )}
         </div>
+
+        {/* Benefits Watch upsell — only if not subscribed */}
+        {user && !profile?.benefits_watch_active && (
+          <div
+            className="rounded-2xl p-6 mt-6"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(15,110,86,0.3)' }}
+          >
+            <h3 className="font-bold text-white mb-2">Never miss a rate increase</h3>
+            <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              DWP changes rates every April. Benefits Watch monitors your entitlement
+              automatically and alerts you when anything changes.
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="font-semibold" style={{ color: '#4ade80' }}>£3.99/month</span>
+              <Link
+                to="/benefits-watch"
+                className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+                style={{ background: '#0F6E56', color: 'white' }}
+              >
+                Learn more →
+              </Link>
+            </div>
+          </div>
+        )}
 
       </div>
     </Layout>
