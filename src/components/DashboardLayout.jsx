@@ -25,6 +25,51 @@ function NavIcon({ type }) {
   )
 }
 
+function UserInfo({ user, profile }) {
+  return (
+    <div className="p-4 border-b border-gray-100">
+      <div className="flex items-center gap-2">
+        {profile?.avatar_url ? (
+          <img src={profile.avatar_url} className="w-8 h-8 rounded-full" alt="" />
+        ) : (
+          <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 text-xs font-medium">
+            {(user.email || '?')[0].toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-gray-900 truncate">{profile?.full_name || 'My Account'}</p>
+          <p className="text-xs text-gray-400 truncate">{user.email}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function NavList({ items, location, profile, onClick }) {
+  return (
+    <nav className="flex-1 p-3 space-y-1">
+      {items.map(item => (
+        <Link
+          key={item.path}
+          to={item.path}
+          onClick={onClick}
+          className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
+            location.pathname === item.path
+              ? 'bg-teal-50 text-teal-700 font-medium'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <NavIcon type={item.icon} />
+          {item.label}
+          {item.icon === 'shield' && profile?.benefits_watch_active && (
+            <span className="w-2 h-2 rounded-full bg-teal-500 ml-auto flex-shrink-0" />
+          )}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
 export default function DashboardLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -41,9 +86,7 @@ export default function DashboardLayout({ children }) {
       {/* Mobile top bar with hamburger */}
       <header className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200 px-4 h-14 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
-            <span className="text-white text-xs font-bold">CS</span>
-          </div>
+          <img src="/logo.png" alt="ClaimSmart UK" className="w-7 h-7 rounded-md" />
           <span className="font-medium text-gray-900 text-sm">ClaimSmart</span>
         </Link>
         <button
@@ -64,9 +107,7 @@ export default function DashboardLayout({ children }) {
           <aside className="absolute top-0 left-0 h-full w-64 bg-white shadow-xl flex flex-col animate-[slideIn_0.2s_ease-out]">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <Link to="/" className="flex items-center gap-2" onClick={() => setDrawerOpen(false)}>
-                <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">CS</span>
-                </div>
+                <img src="/logo.png" alt="ClaimSmart UK" className="w-7 h-7 rounded-md" />
                 <span className="font-medium text-gray-900 text-sm">ClaimSmart UK</span>
               </Link>
               <button onClick={() => setDrawerOpen(false)} className="w-10 h-10 flex items-center justify-center" aria-label="Close menu">
@@ -76,44 +117,9 @@ export default function DashboardLayout({ children }) {
               </button>
             </div>
 
-            {user && (
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-center gap-2">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} className="w-8 h-8 rounded-full" alt="" />
-                  ) : (
-                    <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 text-xs font-medium">
-                      {(user.email || '?')[0].toUpperCase()}
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-gray-900 truncate">{profile?.full_name || 'My Account'}</p>
-                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
-                  </div>
-                </div>
-              </div>
-            )}
+            {user && <UserInfo user={user} profile={profile} />}
 
-            <nav className="flex-1 p-3 space-y-1">
-              {NAV_ITEMS.map(item => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => setDrawerOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm transition-colors ${
-                    location.pathname === item.path
-                      ? 'bg-teal-50 text-teal-700 font-medium'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <NavIcon type={item.icon} />
-                  {item.label}
-                  {item.icon === 'shield' && profile?.benefits_watch_active && (
-                    <span className="w-2 h-2 rounded-full bg-teal-500 ml-auto flex-shrink-0" />
-                  )}
-                </Link>
-              ))}
-            </nav>
+            <NavList items={NAV_ITEMS} location={location} profile={profile} onClick={() => setDrawerOpen(false)} />
 
             <div className="p-3 border-t border-gray-200">
               <button
@@ -134,50 +140,14 @@ export default function DashboardLayout({ children }) {
       <aside className="hidden lg:flex flex-col fixed left-0 top-0 h-full w-56 bg-white border-r border-gray-200 z-40">
         <div className="p-4 border-b border-gray-200">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-teal-600 rounded-md flex items-center justify-center">
-              <span className="text-white text-xs font-bold">CS</span>
-            </div>
+            <img src="/logo.png" alt="ClaimSmart UK" className="w-7 h-7 rounded-md" />
             <span className="font-medium text-gray-900 text-sm">ClaimSmart UK</span>
           </Link>
         </div>
 
-        {user && (
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} className="w-8 h-8 rounded-full" alt="" />
-              ) : (
-                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-700 text-xs font-medium">
-                  {(user.email || '?')[0].toUpperCase()}
-                </div>
-              )}
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-900 truncate">{profile?.full_name || 'My Account'}</p>
-                <p className="text-xs text-gray-400 truncate">{user.email}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        {user && <UserInfo user={user} profile={profile} />}
 
-        <nav className="flex-1 p-3 space-y-1">
-          {NAV_ITEMS.map(item => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                location.pathname === item.path
-                  ? 'bg-teal-50 text-teal-700 font-medium'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <NavIcon type={item.icon} />
-              {item.label}
-              {item.icon === 'shield' && profile?.benefits_watch_active && (
-                <span className="w-2 h-2 rounded-full bg-teal-500 ml-auto flex-shrink-0" />
-              )}
-            </Link>
-          ))}
-        </nav>
+        <NavList items={NAV_ITEMS} location={location} profile={profile} />
 
         <div className="p-3 border-t border-gray-200">
           <button

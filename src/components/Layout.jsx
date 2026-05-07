@@ -21,12 +21,7 @@ export default function Layout({ children, showNav = true }) {
         >
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-md flex items-center justify-center"
-                style={{ background: '#d4960a' }}
-              >
-                <span className="text-xs font-extrabold" style={{ color: '#0f0722' }}>CS</span>
-              </div>
+              <img src="/logo.png" alt="ClaimSmart UK" className="w-7 h-7 rounded-md" />
               <span className="font-bold text-white text-sm">ClaimSmart UK</span>
             </Link>
 
