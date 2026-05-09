@@ -115,7 +115,7 @@ exports.handler = async (event) => {
       // 3. Send email with PDF attached
       if (customerEmail && pdf) {
         await resend.emails.send({
-          from: 'ClaimSmart UK <reports@claimsmart.uk>',
+          from: process.env.RESEND_FROM || 'ClaimSmart UK <onboarding@resend.dev>',
           to: customerEmail,
           subject: 'Your ClaimSmart benefits report is ready',
           html: `

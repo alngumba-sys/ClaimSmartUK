@@ -39,7 +39,7 @@ export default function ResultsPreview() {
           totalMonthly: data.totalMonthly,
           totalAnnual: data.totalAnnual,
           userId: user?.id || null,
-          referralCode: sessionStorage.getItem('referralCode') || '',
+          referralCode: sessionStorage.getItem('claimsmart_referral') || '',
         }),
       })
       const json = await res.json()

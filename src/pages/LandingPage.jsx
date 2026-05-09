@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import { useDWPStats } from '../hooks/useDWPStats'
+import HeroReportCard from '../components/HeroReportCard'
 
 // ─── data ───────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,6 @@ const steps = [
   },
 ]
 
-// Static DWP published figures (not from Stat-Xplore — these are policy estimates)
 const STATIC_STATS = [
   { value: '£24B',   label: 'Unclaimed every year',      sub: 'DWP estimate · 2026' },
   { value: '7M+',    label: 'Households missing out',    sub: 'UK-wide · all income levels' },
@@ -160,7 +160,6 @@ function fmtM(n) {
 export default function LandingPage() {
   const { stats } = useDWPStats()
 
-  // Live claimant stats — shown when Stat-Xplore data is available
   const liveStats = stats ? [
     stats.uc?.totalClaimants && {
       value: `${fmtM(stats.uc.totalClaimants)}`,
@@ -205,39 +204,52 @@ export default function LandingPage() {
             transform: 'translate(30%, -30%)',
           }}
         />
+
         <div className="relative max-w-5xl mx-auto px-4 pt-20 pb-16">
-          <SectionLabel>The UK Benefits Gap</SectionLabel>
+          <div className="grid md:grid-cols-2 gap-12 items-center">
 
-          <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-[1.1] mb-6 max-w-3xl">
-            Find out what you're owed.{' '}
-            <span className="serif-italic" style={{ color: '#d4960a' }}>In 8 minutes.</span>
-          </h1>
+            {/* ── left: headline + CTA ── */}
+            <div>
+              <SectionLabel>The UK Benefits Gap</SectionLabel>
 
-          <p className="text-lg max-w-2xl mb-10 leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Over <strong className="text-white">£24 billion</strong> goes unclaimed every year in the UK.
-            The average household misses <strong className="text-white">£3,428</strong>.
-            Not because they don't qualify — because they don't know.
-          </p>
+              <h1 className="text-5xl md:text-6xl font-extrabold text-white leading-[1.1] mb-6 max-w-3xl">
+                Find out what you're owed.{' '}
+                <span className="serif-italic" style={{ color: '#d4960a' }}>In 8 minutes.</span>
+              </h1>
 
-          <Link
-            to="/check"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold transition-opacity hover:opacity-90"
-            style={{ background: '#d4960a', color: '#0f0722' }}
-          >
-            Check what you're owed — free
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
-          </Link>
+              <p className="text-lg max-w-2xl mb-10 leading-relaxed" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                Over <strong className="text-white">£24 billion</strong> goes unclaimed every year in the UK.
+                The average household misses <strong className="text-white">£3,428</strong>.
+                Not because they don't qualify — because they don't know.
+              </p>
 
-          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-5 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
-            <span>No login required to start</span>
-            <span>·</span>
-            <span>Takes 8 minutes</span>
-            <span>·</span>
-            <span>2026/27 DWP rates</span>
-            <span>·</span>
-            <span>Results are estimates</span>
+              <Link
+                to="/check"
+                className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold transition-opacity hover:opacity-90"
+                style={{ background: '#d4960a', color: '#0f0722' }}
+              >
+                Check what you're owed — free
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+
+              <div className="flex flex-wrap gap-x-5 gap-y-1 mt-5 text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                <span>No login required to start</span>
+                <span>·</span>
+                <span>Takes 8 minutes</span>
+                <span>·</span>
+                <span>2026/27 DWP rates</span>
+                <span>·</span>
+                <span>Results are estimates</span>
+              </div>
+            </div>
+
+            {/* ── right: animated report card (desktop only) ── */}
+            <div className="block mt-8 md:mt-0">
+              <HeroReportCard />
+            </div>
+
           </div>
         </div>
       </section>
@@ -258,7 +270,6 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Live DWP claimant counts — shown only when Stat-Xplore data loaded */}
         {liveStats.length > 0 && (
           <div className="max-w-5xl mx-auto px-4 pb-10">
             <div className="flex items-center gap-2 mb-3">
@@ -305,7 +316,6 @@ export default function LandingPage() {
             eligible households simply never applied.
           </p>
 
-          {/* comparison table */}
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
             <div
               className="grid grid-cols-3 text-xs font-bold tracking-widest uppercase px-6 py-3"
@@ -335,7 +345,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* why people don't claim */}
           <div className="mt-16">
             <p className="text-xs font-bold tracking-[0.2em] uppercase mb-6" style={{ color: 'rgba(255,255,255,0.35)' }}>
               Why the £24B goes unclaimed · DWP research
@@ -442,7 +451,6 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* what's in the full report */}
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.09)' }}>
             <div
               className="px-6 py-4 flex items-center justify-between"

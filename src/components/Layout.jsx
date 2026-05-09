@@ -1,11 +1,15 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Layout({ children, showNav = true }) {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  const isLanding = location.pathname === '/'
+  const isAdmin   = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
 
   async function handleSignOut() {
     await signOut()
@@ -38,6 +42,15 @@ export default function Layout({ children, showNav = true }) {
                   >
                     Dashboard
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-xs font-bold px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
+                      style={{ background: 'rgba(212,150,10,0.15)', color: '#d4960a', border: '1px solid rgba(212,150,10,0.3)' }}
+                    >
+                      Admin
+                    </Link>
+                  )}
                   <button
                     onClick={handleSignOut}
                     className="text-sm transition-colors"
@@ -48,7 +61,7 @@ export default function Layout({ children, showNav = true }) {
                     Sign out
                   </button>
                 </>
-              ) : (
+              ) : isLanding ? (
                 <Link
                   to="/auth"
                   className="text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity hover:opacity-80"
@@ -56,25 +69,27 @@ export default function Layout({ children, showNav = true }) {
                 >
                   Sign in
                 </Link>
-              )}
+              ) : null}
             </div>
 
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="sm:hidden flex items-center justify-center w-10 h-10"
-              aria-label="Toggle menu"
-            >
-              {menuOpen ? (
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+            {/* Mobile hamburger — only show if user is logged in or on landing */}
+            {(user || isLanding) && (
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="sm:hidden flex items-center justify-center w-10 h-10"
+                aria-label="Toggle menu"
+              >
+                {menuOpen ? (
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Mobile slide-down menu */}
@@ -85,19 +100,33 @@ export default function Layout({ children, showNav = true }) {
                 className="sm:hidden relative z-50 px-4 pb-4 space-y-2"
                 style={{ background: 'rgba(15,7,34,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
               >
-                <Link to="/check" onClick={() => setMenuOpen(false)} className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5">
+                <Link
+                  to="/check"
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-3 text-sm border-b"
+                  style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.05)' }}
+                >
                   Check entitlement
                 </Link>
                 {user ? (
                   <>
-                    <Link to="/dashboard" onClick={() => setMenuOpen(false)} className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5">
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="block py-3 text-sm border-b"
+                      style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.05)' }}
+                    >
                       Dashboard
                     </Link>
-                    <button onClick={() => { handleSignOut(); setMenuOpen(false) }} className="block w-full text-left py-3 text-sm text-white/40 hover:text-white">
+                    <button
+                      onClick={() => { handleSignOut(); setMenuOpen(false) }}
+                      className="block w-full text-left py-3 text-sm"
+                      style={{ color: 'rgba(255,255,255,0.4)' }}
+                    >
                       Sign out
                     </button>
                   </>
-                ) : (
+                ) : isLanding ? (
                   <Link
                     to="/auth"
                     onClick={() => setMenuOpen(false)}
@@ -106,7 +135,7 @@ export default function Layout({ children, showNav = true }) {
                   >
                     Sign in
                   </Link>
-                )}
+                ) : null}
               </div>
             </>
           )}

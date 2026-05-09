@@ -187,8 +187,8 @@ export default function HeroReportCard() {
           <span style={{ color: B.textDim, fontSize: 10 }}>{today}</span>
         </div>
 
-        {/* total hero */}
-        <div style={{ padding: '16px 16px 14px', background: B.amberBg, borderBottom: `1px solid ${B.amberBorder}` }}>
+        {/* total hero — fixed height so annual line doesn't cause reflow */}
+        <div style={{ padding: '16px 16px 14px', background: B.amberBg, borderBottom: `1px solid ${B.amberBorder}`, minHeight: 110 }}>
           <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: B.amber, margin: '0 0 4px' }}>
             You may be missing
           </p>
@@ -198,11 +198,12 @@ export default function HeroReportCard() {
             </span>
             <span style={{ fontSize: 13, color: B.amber }}>/month</span>
           </div>
+          {/* always rendered — opacity transition only, no layout shift */}
           <div style={{
             marginTop: 8, paddingTop: 8, borderTop: `0.5px solid ${B.amberBorder}`,
             opacity: showAnnual ? 1 : 0,
-            transform: showAnnual ? 'translateY(0)' : 'translateY(4px)',
-            transition: 'opacity 0.4s ease, transform 0.4s ease',
+            transition: 'opacity 0.4s ease',
+            height: 18,
           }}>
             <p style={{ fontSize: 11, color: B.amber, margin: 0 }}>
               That's up to{' '}
@@ -212,8 +213,8 @@ export default function HeroReportCard() {
           </div>
         </div>
 
-        {/* benefits list */}
-        <div style={{ padding: '12px 14px 8px' }}>
+        {/* benefits list — fixed height so rows animating in don't resize the card */}
+        <div style={{ padding: '12px 14px 8px', minHeight: 290 }}>
           <p style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: B.textDim, margin: '0 0 8px' }}>
             Benefits you qualify for
           </p>

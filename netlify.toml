@@ -49,3 +49,7 @@
 # Benefits Watch — annual rate change alert on 7 April at 09:00 UTC
 [functions."send-annual-watch"]
   schedule = "0 9 7 4 *"
+
+# Benefits Watch — 30-day post-purchase nudge, daily at 10:00 UTC
+[functions."send-watch-nudge"]
+  schedule = "0 10 * * *"
