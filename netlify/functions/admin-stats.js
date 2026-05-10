@@ -25,7 +25,7 @@ exports.handler = async (event) => {
     // Paid reports
     const { data: reports, count: totalReports } = await supabase
       .from('reports')
-      .select('*', { count: 'exact' })
+      .select('*, profiles(email, full_name)', { count: 'exact' })
       .eq('paid', true)
       .order('created_at', { ascending: false })
 
@@ -81,14 +81,36 @@ exports.handler = async (event) => {
       benefitsFound: r.benefits?.length || 0,
       totalMonthly: r.total_monthly_pence / 100,
       stripeSessionId: r.stripe_session_id,
+      userEmail: r.profiles?.email || r.user_email || '—',
     })) || []
 
-    // Users list
+    // Users list with report counts
     const { data: users } = await supabase
       .from('profiles')
       .select('id, email, full_name, created_at, referral_code, referral_earnings_pence, referred_by')
       .order('created_at', { ascending: false })
       .limit(50)
+
+    // Report counts and postcodes per user
+    const { data: userReports } = await supabase
+      .from('reports')
+      .select('user_id, answers')
+      .eq('paid', true)
+
+    const reportsByUser = {}
+    userReports?.forEach(r => {
+      if (!reportsByUser[r.user_id]) reportsByUser[r.user_id] = { count: 0, postcode: null }
+      reportsByUser[r.user_id].count++
+      if (!reportsByUser[r.user_id].postcode && r.answers?.postcode) {
+        reportsByUser[r.user_id].postcode = r.answers.postcode
+      }
+    })
+
+    const usersWithStats = users?.map(u => ({
+      ...u,
+      reportCount: reportsByUser[u.id]?.count || 0,
+      postcode: reportsByUser[u.id]?.postcode || null,
+    })) || []
 
     // Benefits Watch subscribers
     const { count: watchSubscribers } = await supabase
@@ -108,7 +130,7 @@ exports.handler = async (event) => {
         regionCounts,
         dailySignups,
         recentTransactions,
-        users: users || [],
+        users: usersWithStats,
         watchSubscribers: watchSubscribers || 0,
         watchMRR: (watchSubscribers || 0) * 3.99,
       }),
