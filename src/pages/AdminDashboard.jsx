@@ -113,6 +113,101 @@ function RatesReminder() {
   )
 }
 
+
+function UsersTable({ users, formatGBP }) {
+  const [search, setSearch] = React.useState('')
+  const [sortBy, setSortBy] = React.useState('joined')
+  const [sortDir, setSortDir] = React.useState('desc')
+  const [filterPaid, setFilterPaid] = React.useState('all')
+
+  const sorted = [...users]
+    .filter(u => {
+      const q = search.toLowerCase()
+      const matchSearch = !q || u.email?.toLowerCase().includes(q) || u.full_name?.toLowerCase().includes(q)
+      const matchPaid = filterPaid === 'all'
+        || (filterPaid === 'paid' && u.reportCount > 0)
+        || (filterPaid === 'free' && !u.reportCount)
+      return matchSearch && matchPaid
+    })
+    .sort((a, b) => {
+      let av, bv
+      if (sortBy === 'joined') { av = a.created_at; bv = b.created_at }
+      else if (sortBy === 'email') { av = a.email || ''; bv = b.email || '' }
+      else if (sortBy === 'reports') { av = a.reportCount || 0; bv = b.reportCount || 0 }
+      else if (sortBy === 'earnings') { av = a.referral_earnings_pence || 0; bv = b.referral_earnings_pence || 0 }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1
+      if (av > bv) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+
+  function toggleSort(col) {
+    if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortBy(col); setSortDir('desc') }
+  }
+
+  const SortIcon = ({ col }) => sortBy !== col ? <span className="ml-1 text-gray-300">↕</span>
+    : <span className="ml-1 text-teal-600">{sortDir === 'asc' ? '↑' : '↓'}</span>
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      {/* Header + controls */}
+      <div className="p-4 border-b border-gray-100 flex flex-wrap items-center gap-3">
+        <h2 className="font-medium text-gray-900 mr-auto">Users ({users.length})</h2>
+        <input
+          type="text"
+          placeholder="Search email or name…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 w-52 focus:outline-none focus:ring-1 focus:ring-teal-400"
+        />
+        <select
+          value={filterPaid}
+          onChange={e => setFilterPaid(e.target.value)}
+          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-400"
+        >
+          <option value="all">All users</option>
+          <option value="paid">Paid reports</option>
+          <option value="free">No reports</option>
+        </select>
+      </div>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50">
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('email')}>Email <SortIcon col="email" /></th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Name</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('joined')}>Joined <SortIcon col="joined" /></th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('reports')}>Reports <SortIcon col="reports" /></th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => toggleSort('earnings')}>Referral earnings <SortIcon col="earnings" /></th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Referred by</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.length === 0 && (
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400 text-sm">No users match your filter</td></tr>
+            )}
+            {sorted.map(u => (
+              <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="px-4 py-3 text-gray-600">{u.email}</td>
+                <td className="px-4 py-3 text-gray-600">{u.full_name || '—'}</td>
+                <td className="px-4 py-3 text-gray-400">{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
+                <td className="px-4 py-3 text-center">
+                  {u.reportCount > 0
+                    ? <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">{u.reportCount}</span>
+                    : <span className="text-gray-300">—</span>}
+                </td>
+                <td className="px-4 py-3 text-teal-600">{formatGBP((u.referral_earnings_pence || 0) / 100)}</td>
+                <td className="px-4 py-3 text-gray-400">{u.referred_by || '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -492,39 +587,7 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'users' && stats && (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-medium text-gray-900">Users ({stats.totalUsers})</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    {['Email', 'Name', 'Joined', 'Reports', 'Region', 'Referral earnings', 'Referred by'].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.users.map(u => (
-                    <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="px-4 py-3 text-gray-600">{u.email}</td>
-                      <td className="px-4 py-3 text-gray-600">{u.full_name || '—'}</td>
-                      <td className="px-4 py-3 text-gray-400">{new Date(u.created_at).toLocaleDateString('en-GB')}</td>
-                      <td className="px-4 py-3 text-center">
-                        {u.reportCount > 0
-                          ? <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">{u.reportCount}</span>
-                          : <span className="text-gray-300">—</span>}
-                      </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{u.lastRegion || '—'}</td>
-                      <td className="px-4 py-3 text-teal-600">{formatGBP((u.referral_earnings_pence || 0) / 100)}</td>
-                      <td className="px-4 py-3 text-gray-400">{u.referred_by || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <UsersTable users={stats.users} formatGBP={formatGBP} />
         )}
 
         {/* ── Rates tab ───────────────────────────────────────────────────── */}
