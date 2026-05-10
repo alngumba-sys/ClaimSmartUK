@@ -4,8 +4,7 @@ const { createClient } = require('@supabase/supabase-js')
 const { SECURE_HEADERS } = require('./_utils')
 
 function isAdmin(event) {
-  const auth = event.headers.authorization || ''
-  const token = auth.replace('Bearer ', '')
+  const token = event.headers['x-admin-token'] || ''
   return token === process.env.ADMIN_PASSWORD
 }
 
