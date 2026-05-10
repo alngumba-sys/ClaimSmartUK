@@ -25,8 +25,12 @@ export default function AdminRoute({ children }) {
     )
   }
 
-  // Admin via Google OAuth
+  // Admin via Google OAuth — set token for API calls
   if (user && user.email === adminEmail) {
+    if (!sessionStorage.getItem('adminToken')) {
+      sessionStorage.setItem('adminAuth', 'true')
+      sessionStorage.setItem('adminToken', import.meta.env.VITE_ADMIN_PASSWORD || '')
+    }
     return children
   }
 
