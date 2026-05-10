@@ -6,7 +6,7 @@ export default function AdminRoute({ children }) {
   const { user, loading } = useAuth()
   const [timedOut, setTimedOut] = useState(false)
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || ''
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com'
 
   // Safety timeout — if loading takes more than 3s, stop waiting
   useEffect(() => {

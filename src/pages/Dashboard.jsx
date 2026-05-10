@@ -33,7 +33,7 @@ export default function Dashboard() {
 
   // If admin signed in via Google OAuth, redirect to /admin
   useEffect(() => {
-    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || ''
+    const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com'
     if (user && user.email === adminEmail) {
       navigate('/admin', { replace: true })
     }

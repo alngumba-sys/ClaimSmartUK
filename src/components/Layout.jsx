@@ -8,7 +8,7 @@ export default function Layout({ children, showNav = true }) {
   const location          = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
+  const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com')
 
   function handleSignOut() {
     setMenuOpen(false)

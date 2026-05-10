@@ -9,7 +9,7 @@ export default function AdminLogin() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
-  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || ''
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com'
 
   // If already logged in as admin via Google OAuth — skip login form
   if (!loading && user && adminEmail && user.email === adminEmail) {
