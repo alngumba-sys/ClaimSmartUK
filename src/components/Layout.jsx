@@ -71,7 +71,7 @@ export default function Layout({ children, showNav = true }) {
                   )}
                   <button
                     type="button"
-                    onClick={handleSignOut}
+                    onClick={() => { alert("clicked"); handleSignOut() }}
                     className="text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                   >
                     Sign out
@@ -138,7 +138,7 @@ export default function Layout({ children, showNav = true }) {
                   )}
                   <button
                     type="button"
-                    onClick={handleSignOut}
+                    onClick={() => { alert("clicked"); handleSignOut() }}
                     className="block w-full text-left py-3 text-sm text-white/40 hover:text-white/70 cursor-pointer"
                   >
                     Sign out
