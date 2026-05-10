@@ -27,7 +27,7 @@ const VALID_TASK_KEYS = new Set([
 ])
 
 function checkAdminAuth(event) {
-  return event.headers['x-admin-token'] === process.env.ADMIN_PASSWORD
+  return event.headers['x-admin-token'] === process.env.ADMIN_SECRET
 }
 
 exports.handler = async (event) => {

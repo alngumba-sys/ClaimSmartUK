@@ -5,7 +5,7 @@ const { SECURE_HEADERS } = require('./_utils')
 
 function isAdmin(event) {
   const token = event.headers['x-admin-token'] || ''
-  return token === process.env.ADMIN_PASSWORD
+  return token === process.env.ADMIN_SECRET
 }
 
 exports.handler = async (event) => {

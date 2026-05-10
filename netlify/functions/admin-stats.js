@@ -8,7 +8,7 @@ const supabase = createClient(
 
 function checkAdminAuth(event) {
   const auth = event.headers['x-admin-token']
-  return auth === process.env.ADMIN_PASSWORD
+  return auth === process.env.ADMIN_SECRET
 }
 
 exports.handler = async (event) => {
