@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, BarElement, Title, Tooltip, Legend,
@@ -125,6 +126,7 @@ export default function AdminDashboard() {
   const [maintenance, setMaintenance] = useState(null)
   const [maintSaving, setMaintSaving] = useState(null) // taskKey being saved
   const navigate = useNavigate()
+  const { signOut } = useAuth()
 
   useEffect(() => {
     // Support both Google OAuth admin and manual token login
@@ -310,7 +312,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-4">
           <button onClick={() => loadStats()} className="text-sm text-teal-600 hover:underline">Refresh</button>
           <button
-            onClick={() => { sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminToken'); navigate('/admin/login') }}
+            onClick={() => { sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminToken'); signOut().catch(() => {}); window.location.href = '/' }}
             className="text-sm text-gray-500 hover:text-gray-700"
           >
             Sign out
