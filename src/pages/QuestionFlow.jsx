@@ -216,12 +216,12 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
 
         {/* Logo mark */}
         <div className="text-center mb-6">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center mx-auto"
-            style={{ background: 'linear-gradient(135deg, #d4960a, #f0c040)' }}
-          >
-            <span className="text-xs font-extrabold" style={{ color: '#0f0722' }}>CS</span>
-          </div>
+          <img
+            src="/ClaimSmartUK_logo_clear.png"
+            alt="ClaimSmart UK"
+            className="w-16 h-16 mx-auto"
+            style={{ display: 'block' }}
+          />
         </div>
 
         {/* ── The teaser card ── */}
@@ -253,7 +253,10 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
           {/* Teaser row — blurred benefit names */}
           <div className="px-5 py-4">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              We found {benefitCount} benefits you may qualify for
+              {benefitCount === 1 
+                ? 'We found a benefit you may qualify for'
+                : `We found ${benefitCount} benefits you may qualify for`
+              }
             </p>
 
             {/* Show benefits — if only 1 benefit OR visible amount = total, lock everything */}
@@ -266,7 +269,9 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
               // lock everything — showing the amount would give it all away
               const totalRounded   = Math.round(totalMonthly || 0)
               const visibleRounded = Math.round(visible.monthlyAmount)
-              const allLocked      = sorted.length === 1 || visibleRounded === totalRounded
+              // Also lock if only one benefit has non-zero amount
+              const nonZeroBenefits = sorted.filter(b => b.monthlyAmount > 0)
+              const allLocked      = sorted.length === 1 || visibleRounded === totalRounded || nonZeroBenefits.length === 1
 
               // Lock placeholder row
               const LockRow = ({ key: k }) => (
