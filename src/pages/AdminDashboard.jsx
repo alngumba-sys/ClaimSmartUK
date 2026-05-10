@@ -312,10 +312,10 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-4">
           <button onClick={() => loadStats()} className="text-sm text-teal-600 hover:underline">Refresh</button>
           <button
-            onClick={() => { sessionStorage.removeItem('adminAuth'); sessionStorage.removeItem('adminToken'); signOut().catch(() => {}); window.location.href = '/' }}
+            onClick={() => { window.location.href = '/' }}
             className="text-sm text-gray-500 hover:text-gray-700"
           >
-            Sign out
+            ← Back
           </button>
         </div>
       </nav>
