@@ -500,7 +500,7 @@ export default function AdminDashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
-                    {['Email', 'Name', 'Joined', 'Reports', 'Postcode', 'Referral earnings', 'Referred by'].map(h => (
+                    {['Email', 'Name', 'Joined', 'Reports', 'Region', 'Referral earnings', 'Referred by'].map(h => (
                       <th key={h} className="text-left px-4 py-3 text-xs font-medium text-gray-500">{h}</th>
                     ))}
                   </tr>
@@ -516,7 +516,7 @@ export default function AdminDashboard() {
                           ? <span className="px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 text-xs font-medium">{u.reportCount}</span>
                           : <span className="text-gray-300">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-gray-500 text-xs">{u.postcode || '—'}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs">{u.lastRegion || '—'}</td>
                       <td className="px-4 py-3 text-teal-600">{formatGBP((u.referral_earnings_pence || 0) / 100)}</td>
                       <td className="px-4 py-3 text-gray-400">{u.referred_by || '—'}</td>
                     </tr>

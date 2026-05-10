@@ -101,15 +101,15 @@ exports.handler = async (event) => {
     userReports?.forEach(r => {
       if (!reportsByUser[r.user_id]) reportsByUser[r.user_id] = { count: 0, postcode: null }
       reportsByUser[r.user_id].count++
-      if (!reportsByUser[r.user_id].postcode && r.answers?.postcode) {
-        reportsByUser[r.user_id].postcode = r.answers.postcode
+      if (!reportsByUser[r.user_id].region && r.answers?.region) {
+        reportsByUser[r.user_id].region = r.answers.region
       }
     })
 
     const usersWithStats = users?.map(u => ({
       ...u,
       reportCount: reportsByUser[u.id]?.count || 0,
-      postcode: reportsByUser[u.id]?.postcode || null,
+      lastRegion: reportsByUser[u.id]?.region || null,
     })) || []
 
     // Benefits Watch subscribers
