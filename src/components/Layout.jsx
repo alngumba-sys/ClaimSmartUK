@@ -47,14 +47,7 @@ export default function Layout({ children, showNav = true }) {
             <div className="hidden sm:flex items-center gap-4">
               {user ? (
                 <>
-                  <Link
-                    to="/dashboard"
-                    className="text-sm font-medium text-white/60 hover:text-white/90 transition-colors"
-                  >
-                    Dashboard
-                  </Link>
-
-                  {isAdmin && (
+                  {isAdmin ? (
                     <Link
                       to="/admin"
                       className="text-xs font-bold px-2.5 py-1 rounded-lg hover:opacity-80 transition-opacity"
@@ -66,6 +59,13 @@ export default function Layout({ children, showNav = true }) {
                     >
                       Admin
                     </Link>
+                  ) : (
+                    <Link
+                      to="/dashboard"
+                      className="text-sm font-medium text-white/60 hover:text-white/90 transition-colors"
+                    >
+                      Dashboard
+                    </Link>
                   )}
 
                   <button
@@ -76,7 +76,7 @@ export default function Layout({ children, showNav = true }) {
                     Sign out
                   </button>
                 </>
-              ) : isLanding ? (
+              ) : (
                 <Link
                   to="/auth"
                   className="text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-80 transition-opacity"
@@ -84,7 +84,7 @@ export default function Layout({ children, showNav = true }) {
                 >
                   Sign in
                 </Link>
-              ) : null}
+              )}
             </div>
 
             {/* Mobile hamburger */}
@@ -119,14 +119,7 @@ export default function Layout({ children, showNav = true }) {
             >
               {user ? (
                 <>
-                  <Link
-                    to="/dashboard"
-                    onClick={() => setMenuOpen(false)}
-                    className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5"
-                  >
-                    Dashboard
-                  </Link>
-                  {isAdmin && (
+                  {isAdmin ? (
                     <Link
                       to="/admin"
                       onClick={() => setMenuOpen(false)}
@@ -135,7 +128,33 @@ export default function Layout({ children, showNav = true }) {
                     >
                       Admin
                     </Link>
+                  ) : (
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setMenuOpen(false)}
+                      className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5"
+                    >
+                      Dashboard
+                    </Link>
                   )}
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="block w-full text-left py-3 text-sm text-white/40 hover:text-white/70 cursor-pointer"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="block text-center py-3 mt-2 rounded-xl text-sm font-semibold"
+                  style={{ background: '#d4960a', color: '#0f0722' }}
+                >
+                  Sign in
+                </Link>
+              )}
                   <button
                     type="button"
                     onClick={handleSignOut}
