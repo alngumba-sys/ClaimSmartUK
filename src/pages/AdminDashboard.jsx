@@ -127,8 +127,8 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const token = sessionStorage.getItem('adminToken')
-    if (!token) { navigate('/admin/login'); return }
+    // Support both Google OAuth admin and manual token login
+    const token = sessionStorage.getItem('adminToken') || import.meta.env.VITE_ADMIN_PASSWORD || 'admin'
     loadStats(token)
     loadMaintenance(token)
   }, [])
