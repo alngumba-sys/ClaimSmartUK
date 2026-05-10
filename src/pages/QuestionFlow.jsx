@@ -214,6 +214,15 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={PAGE_BG}>
       <div className="w-full max-w-sm">
 
+        {/* Back to home */}
+        <a
+          href="/"
+          className="inline-flex items-center gap-1.5 text-sm mb-6"
+          style={{ color: 'rgba(255,255,255,0.5)' }}
+        >
+          <span>←</span> Back to home
+        </a>
+
         {/* Logo mark */}
         <div className="text-center mb-6">
           <img
@@ -238,15 +247,16 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
               Based on your answers, you may be missing at least
             </p>
             <p className="text-5xl font-extrabold mb-1" style={{ color: '#f0c040' }}>
-              £{apiData?.benefits?.length
-                ? Math.round([...apiData.benefits].sort((a,b) => a.monthlyAmount - b.monthlyAmount)[0].monthlyAmount).toLocaleString()
-                : displayTotal.toLocaleString()}
+              £{Math.round(totalMonthly || 0).toLocaleString()}
             </p>
             <p className="text-base font-semibold" style={{ color: '#d4960a' }}>
               per month
             </p>
             <p className="text-xs mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
-              Sign up to see the full amount — there {benefitCount === 1 ? 'is' : 'are'} {benefitCount} benefit{benefitCount === 1 ? '' : 's'} in total
+              {benefitCount === 1
+                ? 'Sign up to see full details and how to claim'
+                : `Sign up to see the full amount — there are ${benefitCount} benefits in total`
+              }
             </p>
           </div>
 
@@ -265,13 +275,14 @@ function TeaserScreen({ answers, onSignInWithGoogle, onSignInWithEmail, onSkip }
               const sorted  = [...apiData.benefits].sort((a, b) => a.monthlyAmount - b.monthlyAmount)
               const visible = sorted[0]
               const locked  = sorted.slice(1)
-              // If only one benefit, or visible amount equals total (nothing extra to tease),
-              // lock everything — showing the amount would give it all away
               const totalRounded   = Math.round(totalMonthly || 0)
               const visibleRounded = Math.round(visible.monthlyAmount)
-              // Also lock if only one benefit has non-zero amount
-              const nonZeroBenefits = sorted.filter(b => b.monthlyAmount > 0)
-              const allLocked      = sorted.length === 1 || visibleRounded === totalRounded || nonZeroBenefits.length === 1
+              // Count benefits worth > £1/month (ignore trivially small amounts)
+              const meaningfulBenefits = sorted.filter(b => b.monthlyAmount >= 1)
+              // Lock all if: only 1 benefit, or visible IS the total (within £2), or only 1 meaningful benefit
+              const allLocked = sorted.length === 1 
+                || Math.abs(visibleRounded - totalRounded) < 2 
+                || meaningfulBenefits.length <= 1
 
               // Lock placeholder row
               const LockRow = ({ key: k }) => (
