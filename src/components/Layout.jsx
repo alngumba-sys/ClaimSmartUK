@@ -4,59 +4,74 @@ import { useAuth } from '../contexts/AuthContext'
 
 export default function Layout({ children, showNav = true }) {
   const { user, signOut } = useAuth()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate          = useNavigate()
+  const location          = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const isLanding = location.pathname === '/'
   const isAdmin   = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
 
   async function handleSignOut() {
+    setMenuOpen(false)
     await signOut()
-    navigate('/')
+    navigate('/', { replace: true })
   }
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0f0722' }}>
+
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
       {showNav && (
         <nav
           className="sticky top-0 z-50"
-          style={{ background: 'rgba(15,7,34,0.85)', borderBottom: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)' }}
+          style={{
+            background: 'rgba(15,7,34,0.92)',
+            borderBottom: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(12px)',
+          }}
         >
           <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2">
-              <img src="/logo.png" alt="ClaimSmart UK" className="w-7 h-7 rounded-md" />
+
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+              <img
+                src="/ClaimSmartUK_logo_clear.png"
+                alt="ClaimSmart UK"
+                className="w-7 h-7"
+                style={{ display: 'block' }}
+              />
               <span className="font-bold text-white text-sm">ClaimSmart UK</span>
             </Link>
 
-            {/* Desktop nav links */}
-            <div className="hidden sm:flex items-center gap-3">
+            {/* Desktop links */}
+            <div className="hidden sm:flex items-center gap-4">
               {user ? (
                 <>
                   <Link
                     to="/dashboard"
-                    className="text-sm font-medium transition-colors"
-                    style={{ color: 'rgba(255,255,255,0.6)' }}
-                    onMouseEnter={e => e.target.style.color = '#d4960a'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.6)'}
+                    className="text-sm font-medium text-white/60 hover:text-white/90 transition-colors"
                   >
                     Dashboard
                   </Link>
+
                   {isAdmin && (
                     <Link
                       to="/admin"
-                      className="text-xs font-bold px-2.5 py-1 rounded-lg transition-opacity hover:opacity-80"
-                      style={{ background: 'rgba(212,150,10,0.15)', color: '#d4960a', border: '1px solid rgba(212,150,10,0.3)' }}
+                      className="text-xs font-bold px-2.5 py-1 rounded-lg hover:opacity-80 transition-opacity"
+                      style={{
+                        background: 'rgba(212,150,10,0.15)',
+                        color: '#d4960a',
+                        border: '1px solid rgba(212,150,10,0.3)',
+                      }}
                     >
                       Admin
                     </Link>
                   )}
+
                   <button
+                    type="button"
                     onClick={handleSignOut}
-                    className="text-sm transition-colors"
-                    style={{ color: 'rgba(255,255,255,0.4)' }}
-                    onMouseEnter={e => e.target.style.color = 'rgba(255,255,255,0.7)'}
-                    onMouseLeave={e => e.target.style.color = 'rgba(255,255,255,0.4)'}
+                    className="text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                   >
                     Sign out
                   </button>
@@ -64,7 +79,7 @@ export default function Layout({ children, showNav = true }) {
               ) : isLanding ? (
                 <Link
                   to="/auth"
-                  className="text-sm font-semibold px-4 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                  className="text-sm font-semibold px-4 py-1.5 rounded-lg hover:opacity-80 transition-opacity"
                   style={{ background: '#d4960a', color: '#0f0722' }}
                 >
                   Sign in
@@ -72,19 +87,20 @@ export default function Layout({ children, showNav = true }) {
               ) : null}
             </div>
 
-            {/* Mobile hamburger — only show if user is logged in or on landing */}
+            {/* Mobile hamburger */}
             {(user || isLanding) && (
               <button
-                onClick={() => setMenuOpen(!menuOpen)}
-                className="sm:hidden flex items-center justify-center w-10 h-10"
+                type="button"
+                onClick={() => setMenuOpen(o => !o)}
+                className="sm:hidden flex items-center justify-center w-10 h-10 text-white"
                 aria-label="Toggle menu"
               >
                 {menuOpen ? (
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 ) : (
-                  <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                   </svg>
                 )}
@@ -92,61 +108,66 @@ export default function Layout({ children, showNav = true }) {
             )}
           </div>
 
-          {/* Mobile slide-down menu */}
+          {/* Mobile menu */}
           {menuOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-              <div
-                className="sm:hidden relative z-50 px-4 pb-4 space-y-2"
-                style={{ background: 'rgba(15,7,34,0.95)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                <Link
-                  to="/check"
-                  onClick={() => setMenuOpen(false)}
-                  className="block py-3 text-sm border-b"
-                  style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.05)' }}
-                >
-                  Check entitlement
-                </Link>
-                {user ? (
-                  <>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setMenuOpen(false)}
-                      className="block py-3 text-sm border-b"
-                      style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.05)' }}
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => { handleSignOut(); setMenuOpen(false) }}
-                      className="block w-full text-left py-3 text-sm"
-                      style={{ color: 'rgba(255,255,255,0.4)' }}
-                    >
-                      Sign out
-                    </button>
-                  </>
-                ) : isLanding ? (
+            <div
+              className="sm:hidden px-4 pb-4 space-y-1"
+              style={{
+                background: 'rgba(15,7,34,0.97)',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              {user ? (
+                <>
                   <Link
-                    to="/auth"
+                    to="/dashboard"
                     onClick={() => setMenuOpen(false)}
-                    className="block text-center py-3 mt-2 rounded-xl text-sm font-semibold"
-                    style={{ background: '#d4960a', color: '#0f0722' }}
+                    className="block py-3 text-sm text-white/70 hover:text-white border-b border-white/5"
                   >
-                    Sign in
+                    Dashboard
                   </Link>
-                ) : null}
-              </div>
-            </>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setMenuOpen(false)}
+                      className="block py-3 text-sm font-bold border-b border-white/5"
+                      style={{ color: '#d4960a' }}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="block w-full text-left py-3 text-sm text-white/40 hover:text-white/70 cursor-pointer"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : isLanding ? (
+                <Link
+                  to="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="block text-center py-3 mt-2 rounded-xl text-sm font-semibold"
+                  style={{ background: '#d4960a', color: '#0f0722' }}
+                >
+                  Sign in
+                </Link>
+              ) : null}
+            </div>
           )}
         </nav>
       )}
 
       <main className="flex-1">{children}</main>
 
-      <footer style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.07)' }} className="py-8">
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer
+        className="py-8"
+        style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.07)' }}
+      >
         <div className="max-w-5xl mx-auto px-4 text-center">
-          <div className="flex justify-center flex-wrap gap-3 sm:gap-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          <div className="flex justify-center flex-wrap gap-3 sm:gap-4 text-xs text-white/30">
             <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
             <span>·</span>
             <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
@@ -157,6 +178,7 @@ export default function Layout({ children, showNav = true }) {
           </div>
         </div>
       </footer>
+
     </div>
   )
 }
