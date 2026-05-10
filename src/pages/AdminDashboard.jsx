@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from "react-router-dom"
 import { useAuth } from '../contexts/AuthContext'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -115,10 +115,10 @@ function RatesReminder() {
 
 
 function UsersTable({ users, formatGBP }) {
-  const [search, setSearch] = React.useState('')
-  const [sortBy, setSortBy] = React.useState('joined')
-  const [sortDir, setSortDir] = React.useState('desc')
-  const [filterPaid, setFilterPaid] = React.useState('all')
+  const [search, setSearch] = useState('')
+  const [sortBy, setSortBy] = useState('joined')
+  const [sortDir, setSortDir] = useState('desc')
+  const [filterPaid, setFilterPaid] = useState('all')
 
   const sorted = [...users]
     .filter(u => {
