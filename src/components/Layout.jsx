@@ -10,13 +10,9 @@ export default function Layout({ children, showNav = true }) {
 
   const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
 
-  async function handleSignOut() {
+  function handleSignOut() {
     setMenuOpen(false)
-    try {
-      await signOut()
-    } catch (e) {
-      console.error('signOut error:', e)
-    }
+    signOut().catch(() => {})
     window.location.href = '/'
   }
 
@@ -71,7 +67,7 @@ export default function Layout({ children, showNav = true }) {
                   )}
                   <button
                     type="button"
-                    onClick={() => { alert("clicked"); handleSignOut() }}
+                    onClick={handleSignOut}
                     className="text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer"
                   >
                     Sign out
@@ -138,7 +134,7 @@ export default function Layout({ children, showNav = true }) {
                   )}
                   <button
                     type="button"
-                    onClick={() => { alert("clicked"); handleSignOut() }}
+                    onClick={handleSignOut}
                     className="block w-full text-left py-3 text-sm text-white/40 hover:text-white/70 cursor-pointer"
                   >
                     Sign out
