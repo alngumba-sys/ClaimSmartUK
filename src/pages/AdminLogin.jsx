@@ -1,18 +1,37 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function AdminLogin() {
+  const { user, loading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || ''
+
+  // If already logged in as admin via Google OAuth — skip login form
+  if (!loading && user && adminEmail && user.email === adminEmail) {
+    return <Navigate to="/admin" replace />
+  }
+
   function handleLogin(e) {
     e.preventDefault()
-    // Simple client-side check — real auth is on server via x-admin-token header
     sessionStorage.setItem('adminAuth', 'true')
     sessionStorage.setItem('adminToken', password)
     navigate('/admin')
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0f0722' }}>
+        <div
+          className="w-8 h-8 border-2 rounded-full animate-spin"
+          style={{ borderColor: '#d4960a', borderTopColor: 'transparent' }}
+        />
+      </div>
+    )
   }
 
   return (
