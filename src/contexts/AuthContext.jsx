@@ -99,7 +99,7 @@ export function AuthProvider({ children }) {
 
   // ── Sign out ──────────────────────────────────────────────────────────────
   async function signOut() {
-    await supabase.auth.signOut()
+    await supabase.auth.signOut({ scope: 'global' })
     setUser(null)
     setProfile(null)
   }
