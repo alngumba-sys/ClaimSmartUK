@@ -10,13 +10,17 @@ export default function Layout({ children, showNav = true }) {
 
   const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com')
 
-  async function handleSignOut() {
+  function handleSignOut() {
     setMenuOpen(false)
-    sessionStorage.removeItem('adminAuth')
-    sessionStorage.removeItem('adminToken')
-    sessionStorage.removeItem('claimsmart_benefits')
-    sessionStorage.removeItem('claimsmart_answers')
-    try { await signOut() } catch {}
+    // Clear all local state immediately
+    sessionStorage.clear()
+    localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] + '-auth-token')
+    // Clear all supabase localStorage keys
+    Object.keys(localStorage).forEach(k => {
+      if (k.startsWith('sb-')) localStorage.removeItem(k)
+    })
+    // Fire signOut without waiting — redirect immediately
+    signOut().catch(() => {})
     window.location.href = '/'
   }
 
