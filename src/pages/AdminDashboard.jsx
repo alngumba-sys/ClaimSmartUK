@@ -141,7 +141,7 @@ export default function AdminDashboard() {
     setRatesLoading(true)
     setRatesError(null)
     try {
-      const token = sessionStorage.getItem('adminToken') || 'Lewal@1234'
+      const token = sessionStorage.getItem('adminToken')
       const res = await fetch('/.netlify/functions/admin-rates', {
         headers: { 'x-admin-token': token }
       })
@@ -158,7 +158,7 @@ export default function AdminDashboard() {
   async function saveRate(id, newAmount) {
     setRateSaving(true)
     try {
-      const token = sessionStorage.getItem('adminToken') || 'Lewal@1234'
+      const token = sessionStorage.getItem('adminToken')
       const res = await fetch('/.netlify/functions/admin-rates', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
