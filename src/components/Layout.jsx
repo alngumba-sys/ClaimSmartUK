@@ -12,6 +12,8 @@ export default function Layout({ children, showNav = true }) {
 
   function handleSignOut() {
     setMenuOpen(false)
+    localStorage.clear()
+    sessionStorage.clear()
     signOut().catch(() => {})
     window.location.href = '/'
   }
