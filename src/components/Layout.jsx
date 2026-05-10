@@ -8,8 +8,7 @@ export default function Layout({ children, showNav = true }) {
   const location          = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const isLanding = location.pathname === '/'
-  const isAdmin   = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
+  const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || '')
 
   async function handleSignOut() {
     setMenuOpen(false)
@@ -20,7 +19,6 @@ export default function Layout({ children, showNav = true }) {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#0f0722' }}>
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
       {showNav && (
         <nav
           className="sticky top-0 z-50"
@@ -67,7 +65,6 @@ export default function Layout({ children, showNav = true }) {
                       Dashboard
                     </Link>
                   )}
-
                   <button
                     type="button"
                     onClick={handleSignOut}
@@ -88,24 +85,22 @@ export default function Layout({ children, showNav = true }) {
             </div>
 
             {/* Mobile hamburger */}
-            {(user || isLanding) && (
-              <button
-                type="button"
-                onClick={() => setMenuOpen(o => !o)}
-                className="sm:hidden flex items-center justify-center w-10 h-10 text-white"
-                aria-label="Toggle menu"
-              >
-                {menuOpen ? (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setMenuOpen(o => !o)}
+              className="sm:hidden flex items-center justify-center w-10 h-10 text-white"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
 
           {/* Mobile menu */}
@@ -155,24 +150,6 @@ export default function Layout({ children, showNav = true }) {
                   Sign in
                 </Link>
               )}
-                  <button
-                    type="button"
-                    onClick={handleSignOut}
-                    className="block w-full text-left py-3 text-sm text-white/40 hover:text-white/70 cursor-pointer"
-                  >
-                    Sign out
-                  </button>
-                </>
-              ) : isLanding ? (
-                <Link
-                  to="/auth"
-                  onClick={() => setMenuOpen(false)}
-                  className="block text-center py-3 mt-2 rounded-xl text-sm font-semibold"
-                  style={{ background: '#d4960a', color: '#0f0722' }}
-                >
-                  Sign in
-                </Link>
-              ) : null}
             </div>
           )}
         </nav>
@@ -180,7 +157,6 @@ export default function Layout({ children, showNav = true }) {
 
       <main className="flex-1">{children}</main>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer
         className="py-8"
         style={{ background: '#0f0722', borderTop: '1px solid rgba(255,255,255,0.07)' }}
