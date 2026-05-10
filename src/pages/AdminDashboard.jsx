@@ -179,7 +179,7 @@ export default function AdminDashboard() {
       const res = await fetch('/.netlify/functions/admin-stats', {
         headers: { 'x-admin-token': token || sessionStorage.getItem('adminToken') },
       })
-      if (res.status === 401) { navigate('/admin/login'); return }
+      if (res.status === 401) { console.warn('admin-stats 401 - token mismatch'); return }
       const data = await res.json()
       setStats(data)
     } catch (err) {
