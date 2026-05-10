@@ -12,8 +12,10 @@ export default function Layout({ children, showNav = true }) {
 
   function handleSignOut() {
     setMenuOpen(false)
-    localStorage.clear()
-    sessionStorage.clear()
+    sessionStorage.removeItem('adminAuth')
+    sessionStorage.removeItem('adminToken')
+    sessionStorage.removeItem('claimsmart_benefits')
+    sessionStorage.removeItem('claimsmart_answers')
     signOut().catch(() => {})
     window.location.href = '/'
   }
