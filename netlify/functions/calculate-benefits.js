@@ -141,8 +141,16 @@ exports.handler = async (event) => {
     const rates = {}
     for (const r of ratesData) {
       if (!rates[r.category]) rates[r.category] = {}
-      rates[r.category][r.name] = r.amount_monthly
+      rates[r.category][r.name] = Number(r.amount_monthly)
     }
+    
+    console.log('Loaded rates:', JSON.stringify({
+      categories: Object.keys(rates),
+      uc_keys: Object.keys(rates.uc || {}),
+      pip_keys: Object.keys(rates.pip || {}),
+      cb_keys: Object.keys(rates.child_benefit || {}),
+      sample: rates.uc?.standard_25_plus,
+    }))
 
     // ── Parse answers ──────────────────────────────────────────────────────
     const income     = parseIncome(answers.income)
