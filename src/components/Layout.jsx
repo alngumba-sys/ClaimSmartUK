@@ -12,8 +12,12 @@ export default function Layout({ children, showNav = true }) {
 
   async function handleSignOut() {
     setMenuOpen(false)
-    await signOut()
-    navigate('/', { replace: true })
+    try {
+      await signOut()
+    } catch (e) {
+      console.error('signOut error:', e)
+    }
+    window.location.href = '/'
   }
 
   return (
