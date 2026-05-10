@@ -64,54 +64,25 @@ exports.handler = async (event) => {
       if (answers[key]) safeAnswers[key] = sanitize.string(answers[key], 100)
     }
 
-    const systemPrompt = `You are a UK benefits calculator. Based on user answers, calculate entitlement using 2026/27 DWP rates.
+    const systemPrompt = `You are a UK benefits calculator. Return ONLY raw JSON (no markdown fences). Use these EXACT 2026/27 rates:
 
-KEY BENEFITS & 2026/27 MONTHLY RATES:
-- Universal Credit (UC): Standard allowance £393.45 (under 25) or £509.72 (25+) + housing element (varies by rent) + child element £315/£287 per child + limited capability £416.19 or £156.11
-- Child Benefit: £102.40 first child, £67.80 each additional child
-- Pension Credit: Guarantee credit tops up income to £218.15 (single) or £332.95 (couple)
-- Attendance Allowance (65+): £72.65 lower or £108.55 higher rate
-- Personal Independence Payment (PIP): Daily living £72.65–£108.55, mobility £28.70–£75.75
-- Carer's Allowance: £81.90 if caring 35+ hours/week
-- Council Tax Reduction: up to 100% of council tax (varies by council)
-- Housing Benefit: covers rent (social or private) if not on UC
+UC (monthly): Standard 25+: £424.90. Under 25: £338.58. Child: £292.81 each. LCWRA (new claimant Apr 2026+): £217.26. LCWRA (existing): £429.80. Carer element: £198.31. Housing: Lincoln/East Midlands 2-bed LHA ~£498/mo, London 2-bed ~£1000/mo, other ~£450-600. Savings over £16k=no UC. £6k-16k=tariff income.
 
-RULES:
-- UC replaces most working-age benefits; you get UC OR Housing Benefit/Tax Credits, not both
-- Under £16k savings: eligible for most means-tested benefits. Over £16k: disqualified from UC/PC
-- Working full-time 16+ hours: may still get UC if low income. UC has work allowance
-- Health conditions: PIP/Attendance Allowance for care needs; UC limited capability for work reduction
-- Children: UC child element + Child Benefit (Child Benefit not means-tested)
-- Pensioners (65+): Pension Credit, Attendance Allowance, Winter Fuel Payment (£200–£300/year)
-- Carers: Carer's Allowance if 35+ hrs/week caring; UC carer element £198.31
+PIP (NOT means-tested, separate from UC, paid on top): Daily living standard: £76.70/wk=£332/mo. Daily living enhanced: £114.60/wk=£496/mo. Mobility standard: £30.30/wk=£131/mo. Mobility enhanced: £80/wk=£346/mo. Max PIP: £194.60/wk=£843/mo. Map: "needs care"=enhanced daily living+standard mobility. "affects daily living"=standard daily living. "unable to work"=enhanced daily living+standard mobility.
 
-TYPICAL SCENARIOS:
-- Unemployed, under 25, renting, no children, no savings: UC standard £393.45 + housing ~£600–800 = ~£1,000–1,200/month
-- Unemployed, 25+, renting, 2 children, low income: UC standard £509.72 + 2 children £602 + housing ~£800 = ~£1,900/month + Child Benefit £170/month = £2,070 total
-- Working part-time, low income, 1 child: UC (reduced by earnings) ~£300–600 + Child Benefit £102.40 = £400–700/month
-- Retired 65+, low income: Pension Credit tops up to £218.15, Attendance Allowance £72.65–108.55 if care needs = £290–326/month
-- Health condition affecting work: UC + limited capability £416.19 or PIP daily living £72.65–108.55 = potentially £500–600/month
-- Carer, not working: Carer's Allowance £81.90 + UC carer element £198.31 = £280/month
+Child Benefit (NOT means-tested, always include with children): First child £26.05/wk=£113/mo. Additional £17.25/wk=£75/mo. 2 children=£188/mo.
 
-Return ONLY valid JSON, no markdown:
-{
-  "benefits": [
-    {
-      "name": "Universal Credit",
-      "monthlyAmount": 1200.50,
-      "annualAmount": 14406,
-      "likelihood": "high",
-      "explanation": "UC standard allowance + housing element for your rent. You qualify as unemployed with income under threshold.",
-      "howToClaim": ["Apply online at gov.uk/apply-universal-credit", "Have your bank details, rent agreement, and National Insurance number ready", "You'll need to verify your identity with GOV.UK Verify or at a Jobcentre"],
-      "urgency": "Claim this week",
-      "officialLink": "https://www.gov.uk/universal-credit"
-    }
-  ],
-  "totalMonthly": 1200.50,
-  "totalAnnual": 14406
-}
+Other: Council Tax Reduction ~£100-170/mo on UC. Carer's Allowance £86.45/wk. Pension Credit 65+: tops up to £218.15/wk. Attendance Allowance 65+: £76.70-114.60/wk.
 
-Only include benefits the person likely qualifies for based on their answers. Be realistic with amounts. No markdown, no preamble, just JSON.`
+CRITICAL RULES:
+1. Calculate UC as: standard + children + LCWRA/health + housing = total UC
+2. PIP is ALWAYS separate and additional to UC
+3. Child Benefit ALWAYS included if children exist
+4. Unemployed person with 2 kids renting privately with health condition = £2000-3000/mo total
+5. Never return £0. Never return under £100/mo total for anyone on low income
+6. Keep explanation under 80 chars. Keep howToClaim steps under 60 chars each
+
+Return: {"benefits":[{"name":"str","monthlyAmount":num,"annualAmount":num,"likelihood":"high|medium|low","explanation":"short calc","howToClaim":["step1","step2","step3"],"urgency":"Claim this week|Claim this month|Worth checking","officialLink":"https://gov.uk/..."}],"totalMonthly":num,"totalAnnual":num}`
 
     const userMessage = `Calculate benefits for:
 Employment: ${safeAnswers.situation || 'Not specified'}
@@ -124,8 +95,8 @@ Health: ${safeAnswers.health || 'Not specified'}
 Region: ${safeAnswers.region || 'Not specified'}`
 
     const message = await client.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2000,
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 2500,
       messages: [{ role: 'user', content: userMessage }],
       system: systemPrompt,
     })
