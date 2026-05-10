@@ -1,66 +1,62 @@
-// netlify/functions/test-api.js
-// DELETE AFTER DEBUGGING
-const Anthropic = require('@anthropic-ai/sdk')
+const { createClient } = require('@supabase/supabase-js')
 
-exports.handler = async (event) => {
-  const results = { steps: [] }
+exports.handler = async () => {
+  const supabase = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
 
-  // Step 1: Check if _utils loads
-  try {
-    const utils = require('./_utils')
-    results.steps.push({ step: '_utils import', status: 'OK', exports: Object.keys(utils) })
-  } catch (e) {
-    results.steps.push({ step: '_utils import', status: 'FAILED', error: e.message })
+  // Check if benefit_rates table exists and has data
+  const { data, error, count } = await supabase
+    .from('benefit_rates')
+    .select('category, name, amount_monthly', { count: 'exact' })
+
+  if (error) {
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        table_exists: false, 
+        error: error.message,
+        hint: 'Run create_benefit_rates.sql in Supabase SQL Editor'
+      }),
+    }
   }
 
-  // Step 2: Try rate limiting
-  try {
-    const { rateLimit, getIP } = require('./_utils')
-    const ip = getIP(event)
-    const rl = await rateLimit(ip, 'test')
-    results.steps.push({ step: 'rateLimit', status: 'OK', result: rl })
-  } catch (e) {
-    results.steps.push({ step: 'rateLimit', status: 'FAILED', error: e.message })
+  // Show types to verify Number vs String
+  const sample = data[0]
+  const rates = {}
+  for (const r of data) {
+    if (!rates[r.category]) rates[r.category] = {}
+    rates[r.category][r.name] = Number(r.amount_monthly)
   }
 
-  // Step 3: Full calculate-benefits simulation
-  try {
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const systemPrompt = `You are a UK benefits calculation engine. Return ONLY valid JSON with this structure:
-{
-  "benefits": [{"name":"Universal Credit","monthlyAmount":500,"annualAmount":6000,"likelihood":"high","explanation":"Test","howToClaim":["Step 1"],"urgency":"Claim this week","officialLink":"https://gov.uk/universal-credit"}],
-  "totalMonthly": 500,
-  "totalAnnual": 6000
-}`
-
-    const msg = await client.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: 'Calculate benefits for: Employment: Unemployed, Age: 25 to 34, Housing: I rent privately, Children: No children, Monthly income: No income, Savings: Under £1,000, Health: No health conditions, Region: London' }],
-      system: systemPrompt,
-    })
-
-    const text = msg.content[0]?.text || ''
-    const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-    const parsed = JSON.parse(clean)
-    results.steps.push({
-      step: 'full API call + parse',
-      status: 'OK',
-      benefitCount: parsed.benefits?.length,
-      totalMonthly: parsed.totalMonthly,
-    })
-  } catch (e) {
-    results.steps.push({
-      step: 'full API call + parse',
-      status: 'FAILED',
-      error: e.message,
-      name: e.name,
-    })
-  }
+  // Simulate your exact scenario
+  const uc = (rates.uc?.standard_25_plus || 0) + 
+             (rates.uc?.child_element || 0) * 2 + 
+             (rates.uc?.lcwra_new || 0) + 
+             (rates.uc?.housing_east_midlands_2bed || 0)
+  const pip = (rates.pip?.daily_living_enhanced || 0) + (rates.pip?.mobility_standard || 0)
+  const cb = (rates.child_benefit?.first_child || 0) + (rates.child_benefit?.additional_child || 0)
+  const ct = rates.council_tax?.reduction_full || 0
 
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(results, null, 2),
+    body: JSON.stringify({
+      table_exists: true,
+      total_rows: count,
+      sample_type: typeof sample?.amount_monthly,
+      sample_raw: sample?.amount_monthly,
+      sample_as_number: Number(sample?.amount_monthly),
+      categories: Object.keys(rates),
+      your_scenario: {
+        UC: uc,
+        PIP: pip,
+        ChildBenefit: cb,
+        CouncilTax: ct,
+        TOTAL: uc + pip + cb + ct
+      }
+    }, null, 2),
   }
 }
