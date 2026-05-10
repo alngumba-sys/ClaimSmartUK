@@ -10,13 +10,13 @@ export default function Layout({ children, showNav = true }) {
 
   const isAdmin = user?.email === (import.meta.env.VITE_ADMIN_EMAIL || 'alngumba@gmail.com')
 
-  function handleSignOut() {
+  async function handleSignOut() {
     setMenuOpen(false)
     sessionStorage.removeItem('adminAuth')
     sessionStorage.removeItem('adminToken')
     sessionStorage.removeItem('claimsmart_benefits')
     sessionStorage.removeItem('claimsmart_answers')
-    signOut().catch(() => {})
+    try { await signOut() } catch {}
     window.location.href = '/'
   }
 
