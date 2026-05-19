@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { useDWPStats } from '../hooks/useDWPStats'
 import { getInteractionWarnings } from '../data/benefitInteractions'
 
+const PAYMENTS_DISABLED = import.meta.env.VITE_PAYMENTS_DISABLED === 'true'
+
 export default function ResultsPreview() {
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -27,6 +29,41 @@ export default function ResultsPreview() {
   }, [navigate])
 
   async function handleUnlock() {
+    // ── Payments-disabled path (testing / beta) ───────────────────────────
+    if (PAYMENTS_DISABLED) {
+      if (!user) {
+        // Store return destination — AuthPage reads 'authRedirect' to know where to send the user
+        sessionStorage.setItem('authRedirect', '/results')
+        navigate('/auth')
+        return
+      }
+      setCheckoutLoading(true)
+      setCheckoutError(null)
+      try {
+        const answers = JSON.parse(sessionStorage.getItem('claimsmart_answers') || '{}')
+        const res = await fetch('/api/save-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            answers,
+            benefits: data.benefits,
+            totalMonthly: data.totalMonthly,
+            totalAnnual: data.totalAnnual,
+            userId: user.id,
+          }),
+        })
+        const json = await res.json()
+        if (!res.ok) throw new Error(json.error || `Server error ${res.status}`)
+        navigate('/dashboard')
+      } catch (err) {
+        console.error('Save report error:', err)
+        setCheckoutError(err.message || 'Something went wrong. Please try again.')
+        setCheckoutLoading(false)
+      }
+      return
+    }
+
+    // ── Normal Stripe checkout path ───────────────────────────────────────
     setCheckoutLoading(true)
     try {
       const answers = JSON.parse(sessionStorage.getItem('claimsmart_answers') || '{}')
@@ -161,8 +198,9 @@ export default function ResultsPreview() {
             </div>
           )}
 
-          {benefits.map((benefit, i) =>
-            i < 2 ? (
+          {benefits.map((benefit, i) => {
+            const isVisible = PAYMENTS_DISABLED || i < 2
+            return isVisible ? (
               /* Visible benefit card */
               <div
                 key={benefit.name}
@@ -233,7 +271,7 @@ export default function ResultsPreview() {
                 </div>
               </div>
             )
-          )}
+          })}
 
           {/* Benefit interaction warnings */}
           {interactions.length > 0 && (
@@ -276,7 +314,7 @@ export default function ResultsPreview() {
             </div>
           )}
 
-          {/* Unlock section */}
+          {/* Unlock / Save section */}
           <div
             className="rounded-2xl p-6 mt-6 mb-8"
             style={{
@@ -284,7 +322,9 @@ export default function ResultsPreview() {
               border: '1px solid rgba(255,255,255,0.1)',
             }}
           >
-            <h2 className="text-xl font-extrabold text-white mb-4">Unlock your full report</h2>
+            <h2 className="text-xl font-extrabold text-white mb-4">
+              {PAYMENTS_DISABLED ? 'Save your results to your dashboard' : 'Unlock your full report'}
+            </h2>
             <ul className="space-y-2.5 mb-6">
               {[
                 'Complete list of all benefits you qualify for',
@@ -303,17 +343,30 @@ export default function ResultsPreview() {
               ))}
             </ul>
 
-            {/* Value nudge */}
-            <div
-              className="rounded-xl p-3.5 mb-5 text-sm"
-              style={{
-                background: 'rgba(212,150,10,0.1)',
-                border: '1px solid rgba(212,150,10,0.25)',
-                color: 'rgba(212,150,10,0.9)',
-              }}
-            >
-              If you claim just one benefit we've found, you'll recover this cost in minutes.
-            </div>
+            {/* Beta notice or value nudge */}
+            {PAYMENTS_DISABLED ? (
+              <div
+                className="rounded-xl p-3.5 mb-5 text-sm"
+                style={{
+                  background: 'rgba(34,197,94,0.08)',
+                  border: '1px solid rgba(34,197,94,0.25)',
+                  color: 'rgba(34,197,94,0.9)',
+                }}
+              >
+                🎉 Free during beta — log in to save your full report to your dashboard.
+              </div>
+            ) : (
+              <div
+                className="rounded-xl p-3.5 mb-5 text-sm"
+                style={{
+                  background: 'rgba(212,150,10,0.1)',
+                  border: '1px solid rgba(212,150,10,0.25)',
+                  color: 'rgba(212,150,10,0.9)',
+                }}
+              >
+                If you claim just one benefit we've found, you'll recover this cost in minutes.
+              </div>
+            )}
 
             <button
               onClick={handleUnlock}
@@ -327,8 +380,10 @@ export default function ResultsPreview() {
                     className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin"
                     style={{ borderColor: '#0f0722', borderTopColor: 'transparent' }}
                   />
-                  Redirecting to Stripe...
+                  Saving...
                 </>
+              ) : PAYMENTS_DISABLED ? (
+                user ? 'Save to my dashboard — free' : 'Log in to save your results'
               ) : (
                 'Get my full report — £9'
               )}
@@ -341,7 +396,9 @@ export default function ResultsPreview() {
             )}
 
             <p className="text-xs text-center mt-3" style={{ color: 'rgba(255,255,255,0.3)' }}>
-              One-time payment · No subscription · Secure via Stripe
+              {PAYMENTS_DISABLED
+                ? 'Beta access · Free during testing'
+                : 'One-time payment · No subscription · Secure via Stripe'}
             </p>
           </div>
 
